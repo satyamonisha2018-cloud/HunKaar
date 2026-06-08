@@ -1,0 +1,1042 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rental Car Business Dashboard</title>
+  <style>
+    :root {
+      --ink: #152033;
+      --muted: #657287;
+      --paper: #fbfcff;
+      --panel: #ffffff;
+      --line: #dce4ef;
+      --blue: #2457c5;
+      --teal: #008f86;
+      --gold: #d67a18;
+      --red: #c3423f;
+      --green: #238957;
+      --violet: #6f4bd8;
+      --shadow: 0 8px 24px rgba(29,46,73,.10);
+      --shadow-lg: 0 16px 40px rgba(29,46,73,.14);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      color: var(--ink);
+      background: linear-gradient(135deg,rgba(36,87,197,.15),rgba(0,143,134,.11),rgba(214,122,24,.09)), #edf2f8;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 14px;
+    }
+    .shell {
+      width: min(1320px, calc(100% - 28px));
+      margin: 22px auto 56px;
+      display: grid;
+      gap: 18px;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      padding: 34px 40px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 32px;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: linear-gradient(120deg,rgba(36,87,197,.06),rgba(0,143,134,.05),rgba(214,122,24,.07));
+      pointer-events: none;
+    }
+    .hero > * { position: relative; }
+    .eyebrow { color: var(--teal); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; margin-bottom: 8px; }
+    .hero h1 { font-size: 40px; line-height: 1.06; color: var(--ink); margin-bottom: 8px; }
+    .hero p { color: var(--muted); font-size: 15px; line-height: 1.4; }
+    .hero-stats { display: flex; gap: 28px; flex-shrink: 0; }
+    .hero-stat { text-align: center; min-width: 90px; }
+    .hero-stat .hval { display: block; font-size: 26px; font-weight: 800; }
+    .hero-stat .hlbl { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: .06em; }
+
+    /* ── Tabs ── */
+    .tab-bar { display: flex; gap: 8px; }
+    .tab-btn {
+      padding: 11px 26px;
+      border-radius: 9px;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .01em;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: var(--shadow);
+      transition: all .14s;
+    }
+    .tab-btn:hover { color: var(--blue); border-color: var(--blue); }
+    .tab-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+    .tab-page { display: grid; gap: 18px; }
+
+    /* ── Filters ── */
+    .filters {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px 20px;
+      display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+      box-shadow: var(--shadow);
+    }
+    .flabel { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+    .fbtn-group { display: flex; gap: 5px; }
+    .fbtn {
+      padding: 5px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: transparent;
+      color: var(--ink);
+      font-size: 12.5px;
+      cursor: pointer;
+      transition: all .14s;
+      font-family: inherit;
+    }
+    .fbtn:hover { border-color: var(--blue); color: var(--blue); }
+    .fbtn.active { background: var(--blue); color: #fff; border-color: var(--blue); font-weight: 700; }
+    .fbtn.chevy.active { background: var(--blue); border-color: var(--blue); }
+    .fbtn.mustang.active { background: var(--gold); border-color: var(--gold); }
+    .fdivider { width: 1px; height: 24px; background: var(--line); }
+
+    /* ── KPI Grid ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px;
+    }
+    .kpi {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 16px 15px;
+      box-shadow: var(--shadow);
+    }
+    .kpi-lbl { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 6px; }
+    .kpi-val { font-size: 21px; font-weight: 800; line-height: 1; }
+    .kpi-note { font-size: 10.5px; color: var(--muted); margin-top: 5px; }
+    .kpi-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .c-blue { color: var(--blue); }
+    .c-green { color: var(--green); }
+    .c-red { color: var(--red); }
+    .c-gold { color: var(--gold); }
+    .c-teal { color: var(--teal); }
+
+    /* ── Car KPI panels ── */
+    .car-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .car-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .car-panel-head {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
+      padding-bottom: 12px; border-bottom: 1px solid var(--line);
+    }
+    .car-badge {
+      display: inline-block; padding: 3px 11px; border-radius: 20px;
+      font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .chevy-b { background: rgba(36,87,197,.12); color: var(--blue); }
+    .mustang-b { background: rgba(214,122,24,.12); color: var(--gold); }
+    .car-panel-head h3 { font-size: 15px; color: var(--ink); }
+    .car-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .cm { }
+    .cm .v { font-size: 17px; font-weight: 800; }
+    .cm .l { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+
+    /* ── Panels ── */
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+    .panel h2 { font-size: 16px; margin-bottom: 3px; }
+    .panel-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+
+    /* ── Bar charts ── */
+    .month-block { margin-bottom: 16px; }
+    .month-block:last-child { margin-bottom: 0; }
+    .month-name { font-size: 12.5px; font-weight: 700; margin-bottom: 6px; }
+    .bar-rows { display: grid; gap: 4px; }
+    .bar-row { display: grid; grid-template-columns: 64px 1fr 76px; gap: 8px; align-items: center; }
+    .bar-row-lbl { font-size: 11px; color: var(--muted); }
+    .bar-track { background: #edf2f8; border-radius: 3px; height: 16px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; transition: width .35s ease; }
+    .bf-income  { background: var(--green); }
+    .bf-expense { background: var(--red); }
+    .bf-profit  { background: var(--blue); }
+    .bf-loss    { background: var(--red); }
+
+    /* ── Legend (Monthly Financial Performance horizontal bars) ── */
+    .vbar-legend { display: flex; gap: 16px; margin-top: 14px; }
+    .vbar-legend span { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .bar-val { font-size: 11.5px; font-weight: 700; text-align: right; }
+
+    /* ── Utilization legend (used by the booking calendar) ── */
+    .util-legend { display: flex; gap: 14px; margin-top: 12px; }
+    .util-legend span { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+    .dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; }
+
+    /* ── Booking calendar ── */
+    .cal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 18px; }
+    .cal-month-name {
+      position: relative;
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 800; letter-spacing: .03em; color: #fff;
+      padding: 5px 13px; border-radius: 20px; margin-bottom: 10px; cursor: help;
+      box-shadow: var(--shadow);
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .cal-month-name:hover { transform: translateY(-2px) scale(1.04); box-shadow: var(--shadow-lg); }
+    .cal-hint { font-size: 12px; opacity: .85; }
+    .cal-tip {
+      position: absolute; left: 0; top: calc(100% + 9px);
+      width: max-content; max-width: 250px; white-space: normal;
+      background: linear-gradient(135deg, var(--ink), #2c3e5c);
+      color: #fff; font-size: 11.5px; font-weight: 600; line-height: 1.7;
+      padding: 10px 14px; border-radius: 9px;
+      box-shadow: var(--shadow-lg);
+      opacity: 0; visibility: hidden; transform: translateY(-4px);
+      transition: opacity .16s ease, transform .16s ease;
+      z-index: 30; pointer-events: none;
+    }
+    .cal-month-name:hover .cal-tip { opacity: 1; visibility: visible; transform: translateY(0); }
+    .cal-dow, .cal-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+    .cal-dow span { font-size: 9px; font-weight: 800; color: var(--muted); text-align: center; text-transform: uppercase; letter-spacing: .03em; }
+    .cal-day {
+      aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+      border-radius: 4px; font-size: 10px; font-weight: 700;
+    }
+    .cal-day.empty       { background: transparent; }
+    .cal-day.cal-idle    { background: #e7edf6; color: var(--muted); }
+    .cal-day.cal-chevy   { background: var(--blue); color: #fff; }
+    .cal-day.cal-mustang { background: var(--gold); color: #fff; }
+    .cal-day.cal-both    { background: linear-gradient(135deg, var(--blue) 50%, var(--gold) 50%); color: #fff; }
+
+    /* ── Cost recovery ── */
+    .recovery-track { height: 22px; background: #edf2f8; border-radius: 5px; overflow: hidden; display: flex; margin: 4px 0 10px; }
+    .recovery-fill  { height: 100%; transition: width .35s ease; }
+    .rf-chevy   { background: var(--blue); }
+    .rf-mustang { background: var(--gold); }
+    .rf-remain  { background: #c8d5e8; }
+    .recovery-meta { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+    .recovery-meta strong { font-size: 15px; color: var(--ink); }
+    .target-box { margin-top: 14px; padding: 12px 14px; border-radius: 8px; border-left: 3px solid; font-size: 12px; line-height: 1.6; color: var(--ink); }
+    .target-box.on-track  { background: rgba(35,137,87,.07); border-color: var(--green); }
+    .target-box.off-track { background: rgba(195,66,63,.07); border-color: var(--red); }
+
+    /* ── Expense breakdown ── */
+    .cat-block { margin-bottom: 18px; }
+    .cat-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: 8px; }
+    .exp-row { display: grid; grid-template-columns: 80px 1fr 66px; gap: 8px; align-items: center; margin-bottom: 5px; }
+    .exp-lbl { font-size: 11px; color: var(--muted); }
+    .no-data { font-size: 13px; color: var(--muted); padding: 12px 0; }
+
+    .tag {
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em;
+    }
+    .tag-chevy   { background: rgba(36,87,197,.1); color: var(--blue); }
+    .tag-mustang { background: rgba(214,122,24,.1); color: var(--gold); }
+    .good { color: var(--green); font-weight: 700; }
+    .warn { color: var(--gold); font-weight: 700; }
+    .bad  { color: var(--red);  font-weight: 700; }
+
+    /* ── Rate pill ── */
+    .rate-pill {
+      display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700;
+    }
+    .rate-high { background: rgba(35,137,87,.12); color: var(--green); }
+    .rate-mid  { background: rgba(214,122,24,.12); color: var(--gold); }
+    .rate-low  { background: rgba(195,66,63,.10);  color: var(--red); }
+
+    /* ── Customer & booking cards ── */
+    .cust-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+    .cust-card {
+      position: relative; overflow: hidden; border: 1px solid var(--line); border-radius: 12px;
+      padding: 16px 16px 14px; background: var(--panel);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+      cursor: default;
+    }
+    .cust-card::before {
+      content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+    }
+    .cust-card.car-chevy::before   { background: var(--blue); }
+    .cust-card.car-mustang::before { background: var(--gold); }
+    .cust-card:hover {
+      transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: transparent;
+    }
+    .cust-top { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; }
+    .cust-avatar {
+      flex: none; width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 800; color: #fff;
+    }
+    .car-chevy   .cust-avatar { background: linear-gradient(135deg, var(--blue), #5a8af0); }
+    .car-mustang .cust-avatar { background: linear-gradient(135deg, var(--gold), #f4a83f); }
+    .cust-name { font-size: 13.5px; font-weight: 700; color: var(--ink); line-height: 1.25; }
+    .cust-stats { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; }
+    .cust-income { font-size: 19px; font-weight: 800; color: var(--green); line-height: 1; }
+    .cust-stat-lbl { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-top: 4px; }
+    .cust-bar-track { height: 7px; background: #edf2f8; border-radius: 4px; overflow: hidden; margin-bottom: 4px; }
+    .cust-bar-fill { height: 100%; border-radius: 4px; transition: width .4s ease; }
+    .car-chevy   .cust-bar-fill { background: linear-gradient(90deg, var(--blue), #5a8af0); }
+    .car-mustang .cust-bar-fill { background: linear-gradient(90deg, var(--gold), #f4a83f); }
+    .cust-info {
+      position: absolute; inset: auto 0 0 0; transform: translateY(100%);
+      background: linear-gradient(135deg, var(--ink), #2c3e5c); color: #fff;
+      font-size: 11px; font-weight: 600; line-height: 1.7;
+      padding: 12px 16px; border-radius: 0 0 11px 11px;
+      opacity: 0; transition: transform .22s ease, opacity .22s ease;
+    }
+    .cust-card:hover .cust-info { transform: translateY(0); opacity: 1; }
+    .cust-info b { color: #fff; }
+    .cust-info .ci-row { display: flex; justify-content: space-between; gap: 10px; }
+    .cust-info .ci-row span:last-child { font-weight: 800; }
+
+    /* ── Section label ── */
+    .section-lbl {
+      font-size: 10.5px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--muted);
+      border-bottom: 1px solid var(--line); padding-bottom: 6px; margin-bottom: 14px;
+    }
+
+    @media (max-width: 1000px) {
+      .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+      .kpi-grid-4 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 700px) {
+      .kpi-grid, .kpi-grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .car-grid { grid-template-columns: 1fr; }
+      .hero { grid-template-columns: 1fr; }
+      .hero-stats { justify-content: flex-start; }
+    }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ── Hero ── -->
+  <header class="hero">
+    <div>
+      <div class="eyebrow">Rental Car Business &bull; Wave Export &bull; Feb&ndash;May 2026</div>
+      <h1>HunKaar Dashboard</h1>
+      <p>2014 Chevy Cruze &nbsp;&bull;&nbsp; 2019 Ford Mustang GT &nbsp;&bull;&nbsp; 11 bookings &nbsp;&bull;&nbsp; 4 months of data</p>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="hval c-blue"  id="h-income">$0</span>
+        <span class="hlbl">Total Income</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hval c-green" id="h-profit">$0</span>
+        <span class="hlbl">Net Profit</span>
+      </div>
+      <div class="hero-stat">
+        <span class="hval c-teal"  id="h-util">0%</span>
+        <span class="hlbl">Avg Utilization</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Tabs ── -->
+  <div class="tab-bar" id="tabBar">
+    <button class="tab-btn active" data-tab="monthly">Monthly Dashboard</button>
+    <button class="tab-btn" data-tab="booking">Booking &amp; Utilization</button>
+    <button class="tab-btn" data-tab="cost">Cost &amp; Profitability</button>
+  </div>
+
+  <div class="tab-page" id="tab-monthly">
+
+  <!-- ── Filters ── -->
+  <div class="filters">
+    <span class="flabel">Month</span>
+    <div class="fbtn-group" id="monthBtns"></div>
+    <div class="fdivider"></div>
+    <span class="flabel">Car</span>
+    <div class="fbtn-group" id="carBtns"></div>
+  </div>
+
+  <!-- ── KPI Row ── -->
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <!-- ── Per-Car KPIs ── -->
+  <div class="car-grid" id="carKpis"></div>
+
+  <!-- ── Monthly Trend ── -->
+  <div class="panel">
+    <h2>Monthly Financial Performance</h2>
+    <p class="panel-sub">Income, expenses and net profit by month</p>
+    <div id="monthlyTrend"></div>
+  </div>
+
+  <!-- ── Expense Breakdown ── -->
+  <div class="panel">
+    <h2>Expense Breakdown</h2>
+    <p class="panel-sub">Operating costs by category and item</p>
+    <div id="expenseBreakdown"></div>
+  </div>
+
+  <!-- ── Customer & Booking Cards ── -->
+  <div class="panel">
+    <h2>Customer &amp; Booking Details</h2>
+    <p class="panel-sub">Every rental at a glance &mdash; hover a card for the full trip details</p>
+    <div class="cust-grid" id="custCards"></div>
+  </div>
+
+  </div>
+  <!-- /tab-monthly -->
+
+  <!-- ── Booking & Utilization tab ── -->
+  <div class="tab-page" id="tab-booking" style="display:none">
+
+    <!-- ── Booking KPI Row ── -->
+    <div class="kpi-grid-4" id="bookingKpiGrid"></div>
+
+    <!-- ── Booking Calendar ── -->
+    <div class="panel">
+      <h2>Booking Calendar</h2>
+      <p class="panel-sub">Day-by-day view of booked vs idle days, per car &mdash; hover a day for details</p>
+      <div id="bookingCalendar"></div>
+    </div>
+
+  </div>
+  <!-- /tab-booking -->
+
+  <!-- ── Cost & Profitability tab ── -->
+  <div class="tab-page" id="tab-cost" style="display:none">
+    <div class="panel">
+      <h2>Capital Cost Recovery &mdash; Path to Profitability</h2>
+      <p class="panel-sub">Purchase cost vs. income earned to date, tracked against a 24-month break-even target &bull; cumulative all-time figures (always shown regardless of the Monthly Dashboard's filters)</p>
+      <div class="car-grid" id="costRecovery"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  RAW DATA  (parsed from Wave CSV export)
+// ═══════════════════════════════════════════════════════
+
+// Months: index = JS getMonth() (0-based)
+const MONTHS = [
+  { key:"Feb", label:"Feb 2026", index:1, year:2026, days:28 },
+  { key:"Mar", label:"Mar 2026", index:2, year:2026, days:31 },
+  { key:"Apr", label:"Apr 2026", index:3, year:2026, days:30 },
+  { key:"May", label:"May 2026", index:4, year:2026, days:31 },
+];
+
+// start/end arrays: [year, jsMonth(0-based), day]
+const BOOKINGS = [
+  { id:1,  customer:"Terrance Clark Jr", car:"Chevy",   start:[2026,1,28], end:[2026,2,1],  income:76.30,  payMonth:"Feb" },
+  { id:2,  customer:"Katrina Allen",     car:"Chevy",   start:[2026,2,3],  end:[2026,2,7],  income:183.04, payMonth:"Mar" },
+  { id:3,  customer:"Kathleen Soime",    car:"Chevy",   start:[2026,2,11], end:[2026,2,16], income:177.12, payMonth:"Mar" },
+  { id:4,  customer:"Tina",              car:"Mustang", start:[2026,2,25], end:[2026,2,29], income:260.82, payMonth:"Mar" },
+  { id:5,  customer:"Dawn",              car:"Chevy",   start:[2026,3,5],  end:[2026,3,8],  income:86.40,  payMonth:"Apr" },
+  { id:6,  customer:"Autumn",            car:"Chevy",   start:[2026,3,11], end:[2026,3,23], income:378.14, payMonth:"Apr" },
+  { id:7,  customer:"Kimberly",          car:"Chevy",   start:[2026,3,25], end:[2026,3,28], income:115.92, payMonth:"Apr" },
+  { id:8,  customer:"Jahyon",            car:"Chevy",   start:[2026,3,30], end:[2026,4,4],  income:154.87, payMonth:"Apr" },
+  { id:9,  customer:"Hope Esther",       car:"Chevy",   start:[2026,4,17], end:[2026,4,21], income:176.64, payMonth:"May" },
+  { id:10, customer:"Kristyana",         car:"Chevy",   start:[2026,4,22], end:[2026,4,25], income:165.28, payMonth:"May" },
+  { id:11, customer:"Karlene",           car:"Chevy",   start:[2026,4,26], end:[2026,5,1],  income:216.00, payMonth:"May" },
+];
+
+const EXPENSES = [
+  { month:"Mar", car:"Chevy", desc:"Gas",           category:"Fuel",        amount:6.14  },
+  { month:"Mar", car:"Chevy", desc:"Prime Car Wash", category:"Cleaning",    amount:44.00 },
+  { month:"Mar", car:"Chevy", desc:"Air Freshener",  category:"Cleaning",    amount:2.00  },
+  { month:"Mar", car:"Chevy", desc:"Headlight",      category:"Maintenance", amount:25.00 },
+  { month:"Mar", car:"Chevy", desc:"Fuel",           category:"Fuel",        amount:31.00 },
+];
+
+// Purchase price per car — capital cost to recover before the vehicle is "in profit"
+const CAR_COSTS = { Chevy: 7400, Mustang: 23432 };
+
+// Owner's goal: fully recover each car's purchase cost within this many months
+const RECOVERY_TARGET_MONTHS = 24;
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+
+const $ = id => document.getElementById(id);
+const sum = arr => arr.reduce((a, b) => a + b, 0);
+const fmt$ = v => "$" + Math.abs(v).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+const fmtPct = v => (v * 100).toFixed(1) + "%";
+const initials = name => name.trim().split(/\s+/).slice(0, 2).map(w => w[0].toUpperCase()).join("");
+const MNAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+// Cycling palette for the calendar's month badges — keeps a growing list of months visually distinct
+const MONTH_GRADIENTS = [
+  "linear-gradient(135deg, #2457c5, #5a8af0)",
+  "linear-gradient(135deg, #008f86, #1ec4b8)",
+  "linear-gradient(135deg, #d67a18, #f4a83f)",
+  "linear-gradient(135deg, #6f4bd8, #9b7ff0)",
+];
+
+function bookingDates(b) {
+  const s = new Date(b.start[0], b.start[1], b.start[2]);
+  const e = new Date(b.end[0],   b.end[1],   b.end[2]);
+  const arr = [];
+  for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) arr.push(new Date(d));
+  return arr;
+}
+
+function daysInMonth(booking, mo) {
+  return bookingDates(booking).filter(d => d.getFullYear() === mo.year && d.getMonth() === mo.index).length;
+}
+
+function totalDays(booking) { return bookingDates(booking).length; }
+
+function carMonthBooked(car, mo) {
+  return sum(BOOKINGS.filter(b => b.car === car).map(b => daysInMonth(b, mo)));
+}
+
+// All calendar dates a given car is booked on, as "year-month-day" keys for fast lookup
+function carBookedDateSet(car) {
+  const set = new Set();
+  BOOKINGS.filter(b => b.car === car).forEach(b =>
+    bookingDates(b).forEach(d => set.add(`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`))
+  );
+  return set;
+}
+
+// Month with the highest combined booked/available ratio across the given cars
+function bestUtilMonth(mos, cars) {
+  let best = null;
+  mos.forEach(mo => {
+    let booked = 0, avail = 0;
+    cars.forEach(car => { booked += carMonthBooked(car, mo); avail += mo.days; });
+    const util = avail > 0 ? booked / avail : 0;
+    if (!best || util > best.util) best = { label: mo.label, util };
+  });
+  return best;
+}
+
+// ═══════════════════════════════════════════════════════
+//  FILTER STATE
+// ═══════════════════════════════════════════════════════
+
+let fMonth = "All";
+let fCar   = "All";
+
+function visMonths() {
+  return fMonth === "All" ? MONTHS : MONTHS.filter(m => m.key === fMonth);
+}
+
+function visBookings() {
+  return BOOKINGS.filter(b =>
+    (fCar   === "All" || b.car      === fCar)   &&
+    (fMonth === "All" || b.payMonth === fMonth)
+  );
+}
+
+function visExpenses() {
+  return EXPENSES.filter(e =>
+    (fCar   === "All" || e.car   === fCar)   &&
+    (fMonth === "All" || e.month === fMonth)
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER: FILTERS
+// ═══════════════════════════════════════════════════════
+
+function renderFilters() {
+  const mEl = $("monthBtns");
+  const cEl = $("carBtns");
+  ["All", ...MONTHS.map(m => m.key)].forEach(key => {
+    const b = document.createElement("button");
+    b.className = "fbtn" + (fMonth === key ? " active" : "");
+    b.textContent = key;
+    b.onclick = () => { fMonth = key; render(); };
+    mEl.appendChild(b);
+  });
+  ["All", "Chevy", "Mustang"].forEach(key => {
+    const b = document.createElement("button");
+    b.className = "fbtn " + key.toLowerCase() + (fCar === key ? " active" : "");
+    b.textContent = key === "Chevy" ? "Chevy Cruze" : key === "Mustang" ? "Mustang GT" : key;
+    b.onclick = () => { fCar = key; render(); };
+    cEl.appendChild(b);
+  });
+}
+
+function syncFilterBtns() {
+  $("monthBtns").querySelectorAll(".fbtn").forEach(b =>
+    b.classList.toggle("active", b.textContent === fMonth)
+  );
+  $("carBtns").querySelectorAll(".fbtn").forEach(b => {
+    const key = b.textContent === "Chevy Cruze" ? "Chevy" : b.textContent === "Mustang GT" ? "Mustang" : "All";
+    b.className = "fbtn " + key.toLowerCase() + (fCar === key ? " active" : "");
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER: KPI CARDS
+// ═══════════════════════════════════════════════════════
+
+function renderKPIs() {
+  const bk = visBookings();
+  const ex = visExpenses();
+  const mos = visMonths();
+  const cars = fCar === "All" ? ["Chevy","Mustang"] : [fCar];
+
+  const income   = sum(bk.map(b => b.income));
+  const expenses = sum(ex.map(e => e.amount));
+  const profit   = income - expenses;
+  const margin   = income > 0 ? profit / income : 0;
+
+  let bookedDays = 0, availDays = 0;
+  mos.forEach(mo => cars.forEach(car => {
+    bookedDays += carMonthBooked(car, mo);
+    availDays  += mo.days;
+  }));
+  const idleDays  = availDays - bookedDays;
+  const utilRate  = availDays > 0 ? bookedDays / availDays : 0;
+  const tripDays  = sum(bk.map(totalDays));
+  const avgRate   = tripDays > 0 ? income / tripDays : 0;
+
+  $("h-income").textContent = fmt$(income);
+  $("h-profit").textContent = fmt$(profit);
+  $("h-util").textContent   = fmtPct(utilRate);
+
+  const cards = [
+    { lbl:"Total Income",    val:fmt$(income),   cls:"c-blue",  note:"All rental revenue" },
+    { lbl:"Total Expenses",  val:fmt$(expenses), cls:"",        note:"Operating costs only" },
+    { lbl:"Net Profit",      val:fmt$(profit),   cls:profit>=0?"c-green":"c-red",   note:"Income − expenses" },
+    { lbl:"Profit Margin",   val:income>0?fmtPct(margin):"—", cls:margin>=.7?"c-green":margin>=.4?"c-gold":"c-red", note:"Net ÷ income" },
+    { lbl:"Total Bookings",  val:bk.length,      cls:"c-teal",  note:cars.join(" + ") + " combined" },
+    { lbl:"Avg Utilization", val:fmtPct(utilRate), cls:utilRate>=.5?"c-green":utilRate>=.3?"c-gold":"c-red", note:"Booked ÷ available" },
+  ];
+
+  $("kpiGrid").innerHTML = cards.map(c => `
+    <div class="kpi">
+      <div class="kpi-lbl">${c.lbl}</div>
+      <div class="kpi-val ${c.cls}">${c.val}</div>
+      <div class="kpi-note">${c.note}</div>
+    </div>
+  `).join("");
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER: PER-CAR KPI PANELS
+// ═══════════════════════════════════════════════════════
+
+function renderCarKPIs() {
+  const mos = visMonths();
+  $("carKpis").innerHTML = ["Chevy","Mustang"].map(car => {
+    const bk = BOOKINGS.filter(b => b.car === car && (fMonth === "All" || b.payMonth === fMonth));
+    const ex = EXPENSES.filter(e => e.car === car && (fMonth === "All" || e.month  === fMonth));
+    const income   = sum(bk.map(b => b.income));
+    const expenses = sum(ex.map(e => e.amount));
+    const profit   = income - expenses;
+    const booked   = sum(mos.map(mo => carMonthBooked(car, mo)));
+    const tripD    = sum(bk.map(totalDays));
+    const rate     = tripD > 0 ? income / tripD : 0;
+    const topBk    = bk.reduce((best, b) => (!best || b.income > best.income) ? b : best, null);
+    const faded    = fCar !== "All" && fCar !== car;
+    const label    = car === "Chevy" ? "2014 Chevy Cruze" : "2019 Ford Mustang GT";
+    const badgeCls = car === "Chevy" ? "chevy-b" : "mustang-b";
+    const valColor = car === "Chevy" ? "var(--blue)" : "var(--gold)";
+
+    return `
+      <div class="car-panel" style="${faded ? "opacity:.35;pointer-events:none" : ""}">
+        <div class="car-panel-head">
+          <span class="car-badge ${badgeCls}">${car}</span>
+          <h3>${label}</h3>
+        </div>
+        <div class="car-metrics">
+          <div class="cm"><div class="v" style="color:${valColor}">${fmt$(income)}</div><div class="l">Income</div></div>
+          <div class="cm"><div class="v c-red">${fmt$(expenses)}</div><div class="l">Expenses</div></div>
+          <div class="cm"><div class="v ${profit>=0?"c-green":"c-red"}">${fmt$(profit)}</div><div class="l">Net P/L</div></div>
+          <div class="cm"><div class="v c-teal">${booked}</div><div class="l">Booked Days</div></div>
+          <div class="cm"><div class="v">${rate>0 ? fmt$(rate)+"/day" : "—"}</div><div class="l">Avg Daily Rate</div></div>
+          <div class="cm"><div class="v">${topBk ? topBk.customer.split(" ")[0] : "—"}</div><div class="l">Top Customer</div></div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER: CAPITAL COST RECOVERY
+// ═══════════════════════════════════════════════════════
+
+// Format a month count as "~N mo" under 2 years, otherwise "~N.N yrs"
+function fmtDuration(months) {
+  return months < 24 ? `~${months} mo` : `~${(months / 12).toFixed(1)} yrs`;
+}
+
+function renderCostRecovery() {
+  $("costRecovery").innerHTML = ["Chevy","Mustang"].map(car => {
+    const cost        = CAR_COSTS[car];
+    const grossIncome = sum(BOOKINGS.filter(b => b.car === car).map(b => b.income));
+    const expenses    = sum(EXPENSES.filter(e => e.car === car).map(e => e.amount));
+    // Operating costs come out of revenue before any of it can pay back the purchase —
+    // so recovery progress has to be measured against NET profit, not gross income.
+    const netProfit   = grossIncome - expenses;
+    const pct         = netProfit / cost;
+    const barPct      = Math.max(Math.min(pct, 1), 0);
+    const remaining   = cost - netProfit;
+    const monthsIn    = MONTHS.length;
+    const avgMonth    = netProfit / monthsIn;
+    const faded       = fCar !== "All" && fCar !== car;
+    const label       = car === "Chevy" ? "2014 Chevy Cruze" : "2019 Ford Mustang GT";
+    const badgeCls    = car === "Chevy" ? "chevy-b"  : "mustang-b";
+    const fillCls     = car === "Chevy" ? "rf-chevy" : "rf-mustang";
+
+    // ── 24-month target tracking (based on net profit pace) ──
+    // Required pace = cost spread evenly across the target window.
+    const targetPace  = cost / RECOVERY_TARGET_MONTHS;
+    const paceDelta   = avgMonth - targetPace;                                  // + ahead of required pace, − behind
+    const projMonths  = avgMonth > 0 ? Math.ceil(cost / avgMonth) : null;       // total months to break even at current pace
+    const onTrack     = projMonths !== null && projMonths <= RECOVERY_TARGET_MONTHS;
+    const diffMonths  = projMonths !== null ? Math.abs(RECOVERY_TARGET_MONTHS - projMonths) : null;
+
+    let targetHtml;
+    if (remaining <= 0) {
+      const tookMonths = Math.ceil(cost / avgMonth);
+      const ahead      = RECOVERY_TARGET_MONTHS - tookMonths;
+      targetHtml = `<div class="target-box on-track">
+        <strong>&#10003; 24-month target met</strong> &mdash; cost fully recovered (net of operating expenses) in about ${fmtDuration(tookMonths)},
+        ${ahead > 0 ? `${ahead} month${ahead===1?"":"s"} ahead of the ${RECOVERY_TARGET_MONTHS}-month goal.` : `right around the ${RECOVERY_TARGET_MONTHS}-month goal.`}
+      </div>`;
+    } else if (avgMonth <= 0) {
+      const reason = grossIncome > 0 ? `operating expenses are currently outweighing income` : `no income recorded yet`;
+      targetHtml = `<div class="target-box off-track">
+        <strong>${RECOVERY_TARGET_MONTHS}-month target:</strong> needs ${fmt$(targetPace)}/mo in net profit to break even on schedule &mdash;
+        ${reason}, so this car is currently off pace.
+      </div>`;
+    } else if (onTrack) {
+      targetHtml = `<div class="target-box on-track">
+        <strong>&#10003; On track for the ${RECOVERY_TARGET_MONTHS}-month goal</strong> &mdash;
+        averaging ${fmt$(avgMonth)}/mo net vs. ${fmt$(targetPace)}/mo needed (<span class="good">+${fmt$(paceDelta)}/mo ahead of pace</span>).
+        Projected break-even: ${fmtDuration(projMonths)} &mdash; about ${diffMonths} month${diffMonths===1?"":"s"} ahead of schedule.
+      </div>`;
+    } else {
+      targetHtml = `<div class="target-box off-track">
+        <strong>&#9888; Off track for the ${RECOVERY_TARGET_MONTHS}-month goal</strong> &mdash;
+        averaging ${fmt$(avgMonth)}/mo net vs. ${fmt$(targetPace)}/mo needed (<span class="bad">&minus;${fmt$(Math.abs(paceDelta))}/mo behind pace</span>).
+        At this rate, break-even is ${fmtDuration(projMonths)} away &mdash; about ${fmtDuration(diffMonths)} past the ${RECOVERY_TARGET_MONTHS}-month target.
+      </div>`;
+    }
+
+    return `
+      <div class="car-panel" style="${faded ? "opacity:.35;pointer-events:none" : ""}">
+        <div class="car-panel-head">
+          <span class="car-badge ${badgeCls}">${car}</span>
+          <h3>${label}</h3>
+          <span style="margin-left:auto; font-size:12px; color:var(--muted)">Purchase cost <strong style="color:var(--ink)">${fmt$(cost)}</strong></span>
+        </div>
+
+        <div style="font-size:11.5px; color:var(--muted); margin-bottom:10px;">
+          ${fmt$(grossIncome)} income &minus; ${fmt$(expenses)} operating expenses
+          = <strong style="color:var(--ink)">${fmt$(netProfit)} net profit</strong> counted toward recovering the purchase cost
+        </div>
+
+        <div class="recovery-track">
+          <div class="recovery-fill ${fillCls}" style="width:${barPct*100}%"></div>
+          <div class="recovery-fill rf-remain"  style="width:${(1-barPct)*100}%"></div>
+        </div>
+        <div class="recovery-meta">
+          <span><strong>${fmtPct(pct)}</strong> of purchase cost recovered (net)</span>
+          <span>${remaining <= 0 ? `<span class="good">Recovered &mdash; ${fmt$(-remaining)} surplus</span>` : `${fmt$(remaining)} left to break even`}</span>
+        </div>
+
+        <div class="car-metrics">
+          <div class="cm"><div class="v ${netProfit>=0?"c-green":"c-red"}">${fmt$(netProfit)}</div><div class="l">Net Profit to Date</div></div>
+          <div class="cm"><div class="v ${remaining > 0 ? "c-red" : "c-green"}">${fmt$(Math.abs(remaining))}</div><div class="l">${remaining > 0 ? "Left to Break Even" : "Surplus Past Break-Even"}</div></div>
+          <div class="cm"><div class="v">${fmt$(avgMonth)}<span style="font-size:11px;color:var(--muted)">/mo</span></div><div class="l">Avg Monthly Net Profit (${monthsIn} mo)</div></div>
+        </div>
+
+        ${targetHtml}
+      </div>
+    `;
+  }).join("");
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER: MONTHLY TREND
+// ═══════════════════════════════════════════════════════
+
+function renderMonthlyTrend() {
+  const mos  = visMonths();
+  const cars = fCar === "All" ? ["Chevy","Mustang"] : [fCar];
+
+  const data = mos.map(mo => {
+    const inc  = sum(BOOKINGS.filter(b => b.payMonth===mo.key && cars.includes(b.car)).map(b=>b.income));
+    const exp  = sum(EXPENSES.filter(e => e.month===mo.key   && cars.includes(e.car)).map(e=>e.amount));
+    return { label:mo.key, inc, exp, net:inc-exp };
+  });
+
+  const maxV = Math.max(...data.flatMap(d=>[d.inc,d.exp,Math.abs(d.net)]),1);
+  const rows = [
+    { key:"inc", label:"Income",   cls:"bf-income"  },
+    { key:"exp", label:"Expenses", cls:"bf-expense" },
+    { key:"net", label:"Net P/L",  cls:""           },
+  ];
+
+  $("monthlyTrend").innerHTML = data.map(row => `
+    <div class="month-block">
+      <div class="month-name">${row.label}</div>
+      <div class="bar-rows">
+        ${rows.map(r => {
+          const v       = row[r.key];
+          const fillCls = r.key === "net" ? (v >= 0 ? "bf-profit" : "bf-loss") : r.cls;
+          const valCls  = r.key === "exp" ? "bad" : (r.key === "net" ? (v >= 0 ? "good" : "bad") : "good");
+          return `
+            <div class="bar-row">
+              <span class="bar-row-lbl">${r.label}</span>
+              <div class="bar-track"><div class="bar-fill ${fillCls}" style="width:${(Math.abs(v)/maxV)*100}%"></div></div>
+              <span class="bar-val ${valCls}">${fmt$(v)}</span>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </div>
+  `).join("") + `
+    <div class="vbar-legend">
+      <span><i class="dot" style="background:var(--green)"></i> Income</span>
+      <span><i class="dot" style="background:var(--red)"></i> Expenses</span>
+      <span><i class="dot" style="background:var(--blue)"></i> Net P/L (profit)</span>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER: BOOKING & UTILIZATION TAB — KPI ROW
+// ═══════════════════════════════════════════════════════
+
+function renderBookingKPIs() {
+  const mos  = visMonths();
+  const cars = fCar === "All" ? ["Chevy","Mustang"] : [fCar];
+
+  let bookedDays = 0, availDays = 0;
+  mos.forEach(mo => cars.forEach(car => {
+    bookedDays += carMonthBooked(car, mo);
+    availDays  += mo.days;
+  }));
+  const idleDays = availDays - bookedDays;
+  const utilRate = availDays > 0 ? bookedDays / availDays : 0;
+  const best     = bestUtilMonth(mos, cars);
+
+  const cards = [
+    { lbl:"Booked Days",         val:bookedDays,        cls:"c-teal", note:cars.join(" + ") + " combined" },
+    { lbl:"Idle Days",           val:idleDays,          cls:"",       note:`Out of ${availDays} available days` },
+    { lbl:"Overall Utilization", val:fmtPct(utilRate),  cls:utilRate>=.5?"c-green":utilRate>=.3?"c-gold":"c-red", note:"Booked ÷ available" },
+    { lbl:"Best Month",          val:best ? best.label.replace(" 2026","") : "—", cls:"c-teal", note:best ? `${fmtPct(best.util)} utilization` : "No data for this filter" },
+  ];
+
+  $("bookingKpiGrid").innerHTML = cards.map(c => `
+    <div class="kpi">
+      <div class="kpi-lbl">${c.lbl}</div>
+      <div class="kpi-val ${c.cls}">${c.val}</div>
+      <div class="kpi-note">${c.note}</div>
+    </div>
+  `).join("");
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER: BOOKING CALENDAR
+// ═══════════════════════════════════════════════════════
+
+function renderCalendar() {
+  const mos  = visMonths();
+  const cars = fCar === "All" ? ["Chevy","Mustang"] : [fCar];
+  const DOW  = ["Su","Mo","Tu","We","Th","Fr","Sa"];
+
+  // One lookup set per visible car — a single calendar overlays both, color-coded
+  const sets = {};
+  cars.forEach(car => { sets[car] = carBookedDateSet(car); });
+
+  const months = mos.map((mo, mi) => {
+    // Active = calendar days where ANY visible car was booked — matches what the merged
+    // single-cell calendar actually shows (a day with either/both cars booked is one "active" day)
+    let mActive = 0;
+    for (let day = 1; day <= mo.days; day++) {
+      const key = `${mo.year}-${mo.index}-${day}`;
+      if (cars.some(car => sets[car].has(key))) mActive++;
+    }
+    const mIdle  = mo.days - mActive;
+    const mUtil  = mo.days > 0 ? mActive / mo.days : 0;
+    const grad   = MONTH_GRADIENTS[mi % MONTH_GRADIENTS.length];
+    const tip = `
+      <span class="cal-tip">
+        <strong style="color:#8fd1ff">${mActive}</strong> booked day${mActive===1?"":"s"} &bull;
+        <strong style="color:#ffcf8f">${mIdle}</strong> idle day${mIdle===1?"":"s"} &bull;
+        <strong style="color:#8ff5cb">${fmtPct(mUtil)}</strong> utilization
+      </span>`;
+
+    const offset = new Date(mo.year, mo.index, 1).getDay();
+    let cells = "";
+    for (let i = 0; i < offset; i++) cells += `<div class="cal-day empty"></div>`;
+    for (let day = 1; day <= mo.days; day++) {
+      const key     = `${mo.year}-${mo.index}-${day}`;
+      const chevy   = cars.includes("Chevy")   && sets["Chevy"].has(key);
+      const mustang = cars.includes("Mustang") && sets["Mustang"].has(key);
+
+      let cls, label;
+      if (chevy && mustang)   { cls = "cal-both";    label = "Chevy &amp; Mustang both booked"; }
+      else if (chevy)         { cls = "cal-chevy";   label = "Chevy booked"; }
+      else if (mustang)       { cls = "cal-mustang"; label = "Mustang booked"; }
+      else                    { cls = "cal-idle";    label = "Idle &mdash; no booking"; }
+
+      cells += `<div class="cal-day ${cls}" title="${mo.label} ${day} — ${label.replace(/&amp;/g,"&").replace(/&mdash;/g,"—")}">${day}</div>`;
+    }
+    return `
+      <div class="cal-month">
+        <div class="cal-month-name" style="background:${grad}">${mo.label} <span class="cal-hint">&#9432;</span>${tip}</div>
+        <div class="cal-dow">${DOW.map(d => `<span>${d}</span>`).join("")}</div>
+        <div class="cal-days">${cells}</div>
+      </div>`;
+  }).join("");
+
+  let legend = `<div class="util-legend" style="margin-top:18px;flex-wrap:wrap">`;
+  if (cars.includes("Chevy"))   legend += `<span><span class="dot" style="background:var(--blue)"></span>Chevy booked</span>`;
+  if (cars.includes("Mustang")) legend += `<span><span class="dot" style="background:var(--gold)"></span>Mustang booked</span>`;
+  if (cars.length > 1)          legend += `<span><span class="dot" style="background:linear-gradient(135deg,var(--blue) 50%,var(--gold) 50%)"></span>Both booked (overlap)</span>`;
+  legend += `<span><span class="dot" style="background:#e7edf6;border:1px solid var(--line)"></span>Idle</span></div>`;
+
+  $("bookingCalendar").innerHTML = `<div class="cal-grid">${months}</div>` + legend;
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER: EXPENSE BREAKDOWN
+// ═══════════════════════════════════════════════════════
+
+function renderExpenses() {
+  const ex = visExpenses();
+  if (!ex.length) {
+    $("expenseBreakdown").innerHTML = `<p class="no-data">No operating expenses recorded for this selection.</p>
+      <p style="font-size:12px;color:var(--muted);margin-top:4px">Mustang expenses (insurance, maintenance, fuel) have not been entered in Wave yet.</p>`;
+    return;
+  }
+
+  // By category
+  const cats = {};
+  ex.forEach(e => { cats[e.category] = (cats[e.category] || 0) + e.amount; });
+  const catArr = Object.entries(cats).sort((a,b) => b[1]-a[1]);
+  const maxCat = Math.max(...catArr.map(c=>c[1]),1);
+
+  let html = `<div class="section-lbl">By Category</div>`;
+  catArr.forEach(([cat,amt]) => {
+    const pct = (amt/maxCat)*100;
+    html += `
+      <div class="exp-row">
+        <span class="exp-lbl">${cat}</span>
+        <div class="bar-track"><div class="bar-fill bf-expense" style="width:${pct}%"></div></div>
+        <span class="bar-val bad">${fmt$(amt)}</span>
+      </div>
+    `;
+  });
+
+  $("expenseBreakdown").innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER: CUSTOMER & BOOKING CARDS
+// ═══════════════════════════════════════════════════════
+
+function renderCustomerCards() {
+  const bk = visBookings();
+  if (!bk.length) {
+    $("custCards").innerHTML = `<p class="no-data">No bookings for current filter.</p>`;
+    return;
+  }
+  const maxIncome = Math.max(...bk.map(b => b.income), 1);
+
+  $("custCards").innerHTML = bk.map(b => {
+    const [sy,sm,sd] = b.start, [ey,em,ed] = b.end;
+    const startLbl = `${MNAMES[sm]} ${sd}`;
+    const endLbl   = `${MNAMES[em]} ${ed}`;
+    const days     = totalDays(b);
+    const rate     = b.income / days;
+    const rateCls  = rate >= 45 ? "rate-high" : rate >= 30 ? "rate-mid" : "rate-low";
+    const carCls   = `car-${b.car.toLowerCase()}`;
+    return `
+      <div class="cust-card ${carCls}">
+        <div class="cust-top">
+          <div class="cust-avatar">${initials(b.customer)}</div>
+          <div>
+            <div class="cust-name">${b.customer}</div>
+            <span class="tag tag-${b.car.toLowerCase()}">${b.car}</span>
+          </div>
+        </div>
+        <div class="cust-stats">
+          <div>
+            <div class="cust-income">${fmt$(b.income)}</div>
+            <div class="cust-stat-lbl">Total Income</div>
+          </div>
+          <div style="text-align:right">
+            <span class="rate-pill ${rateCls}">${fmt$(rate)}/day</span>
+            <div class="cust-stat-lbl">Per-Day Rate</div>
+          </div>
+        </div>
+        <div class="cust-bar-track"><div class="cust-bar-fill" style="width:${(b.income / maxIncome) * 100}%"></div></div>
+        <div class="cust-info">
+          <div class="ci-row"><span>Rental period</span><span>${startLbl} &ndash; ${endLbl}</span></div>
+          <div class="ci-row"><span>Booked days</span><span>${days}</span></div>
+          <div class="ci-row"><span>Payment month</span><span>${b.payMonth}</span></div>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+// ═══════════════════════════════════════════════════════
+//  MASTER RENDER
+// ═══════════════════════════════════════════════════════
+
+function render() {
+  syncFilterBtns();
+  renderKPIs();
+  renderCarKPIs();
+  renderCostRecovery();
+  renderMonthlyTrend();
+  renderBookingKPIs();
+  renderCalendar();
+  renderExpenses();
+  renderCustomerCards();
+}
+
+// ═══════════════════════════════════════════════════════
+//  TABS
+// ═══════════════════════════════════════════════════════
+
+function switchTab(tab) {
+  $("tab-monthly").style.display = tab === "monthly" ? "grid" : "none";
+  $("tab-booking").style.display = tab === "booking" ? "grid" : "none";
+  $("tab-cost").style.display    = tab === "cost"    ? "grid" : "none";
+  document.querySelectorAll(".tab-btn").forEach(btn =>
+    btn.classList.toggle("active", btn.dataset.tab === tab));
+}
+
+$("tabBar").addEventListener("click", e => {
+  const btn = e.target.closest(".tab-btn");
+  if (btn) switchTab(btn.dataset.tab);
+});
+
+// Boot
+renderFilters();
+render();
+</script>
+</body>
+</html>
