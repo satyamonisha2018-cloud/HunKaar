@@ -1,0 +1,1235 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Car Cost & Profitability Tracker</title>
+    <style>
+      :root {
+        --ink: #152033;
+        --muted: #647287;
+        --paper: #fbfcff;
+        --panel: #ffffff;
+        --line: #dce4ef;
+        --blue: #2457c5;
+        --teal: #008f86;
+        --gold: #d67a18;
+        --red: #c3423f;
+        --green: #238957;
+        --violet: #6f4bd8;
+        --shadow: 0 16px 40px rgba(29, 46, 73, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          linear-gradient(135deg, rgba(36, 87, 197, 0.16), rgba(0, 143, 134, 0.12), rgba(214, 122, 24, 0.1)),
+          #edf2f8;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .shell {
+        width: min(1240px, calc(100% - 32px));
+        margin: 24px auto 48px;
+      }
+
+      .hero,
+      .panel,
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 24px;
+        align-items: center;
+        padding: 34px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, rgba(36, 87, 197, 0.08), rgba(0, 143, 134, 0.06), rgba(214, 122, 24, 0.08));
+        pointer-events: none;
+      }
+
+      .hero > * {
+        position: relative;
+      }
+
+      .eyebrow {
+        color: var(--teal);
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        letter-spacing: 0;
+      }
+
+      h1 {
+        max-width: 780px;
+        font-size: 46px;
+        line-height: 1.05;
+      }
+
+      h2 {
+        font-size: 28px;
+        margin-bottom: 16px;
+      }
+
+      h3 {
+        font-size: 18px;
+        margin-bottom: 8px;
+      }
+
+      p,
+      li,
+      td,
+      span {
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.45;
+      }
+
+      .subtitle {
+        max-width: 780px;
+        margin: 14px 0 0;
+        font-size: 18px;
+      }
+
+      .controls {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .month-view-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+        margin-bottom: 16px;
+      }
+
+      .month-view-head h2 {
+        margin-bottom: 0;
+      }
+
+      .month-controls {
+        justify-content: flex-start;
+      }
+
+      button {
+        border: 1px solid #c1cad8;
+        background: #ffffff;
+        color: #1d2a39;
+        border-radius: 6px;
+        padding: 9px 12px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+      }
+
+      button:hover,
+      button.active {
+        border-color: var(--blue);
+        background: #f4f8ff;
+        box-shadow: 0 8px 18px rgba(36, 87, 197, 0.16);
+        transform: translateY(-1px);
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+        margin-top: 18px;
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .two-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .three-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .panel {
+        padding: 24px;
+        margin-top: 18px;
+      }
+
+      .card {
+        padding: 20px;
+        transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+      }
+
+      .card:hover,
+      tr:hover {
+        transform: translateY(-4px);
+        border-color: rgba(36, 87, 197, 0.42);
+        box-shadow: 0 18px 34px rgba(35, 50, 72, 0.13);
+      }
+
+      .metric-label {
+        display: block;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .metric-value {
+        display: block;
+        color: var(--blue);
+        font-size: 34px;
+        font-weight: 800;
+        line-height: 1;
+        margin-top: 10px;
+      }
+
+      .metric-note {
+        display: block;
+        margin-top: 8px;
+      }
+
+      .good {
+        color: var(--green);
+      }
+
+      .warn {
+        color: var(--gold);
+      }
+
+      .bad {
+        color: var(--red);
+      }
+
+      .progress-track {
+        height: 18px;
+        margin-top: 14px;
+        background: #edf2f8;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .progress-bar {
+        height: 100%;
+        min-width: 2px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--green), var(--teal));
+      }
+
+      .progress-bar.low {
+        background: linear-gradient(90deg, var(--gold), var(--red));
+      }
+
+      .bar-row {
+        display: grid;
+        grid-template-columns: 100px 1fr 90px;
+        gap: 12px;
+        align-items: center;
+        margin: 13px 0;
+      }
+
+      .bar-track {
+        height: 20px;
+        background: #edf2f8;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .bar {
+        height: 100%;
+        min-width: 2px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--blue), var(--teal));
+      }
+
+      .bar.loss {
+        background: linear-gradient(90deg, var(--gold), var(--red));
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      th,
+      td {
+        padding: 13px 14px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+      }
+
+      th {
+        background: linear-gradient(90deg, #eef4ff, #edf9f7);
+        color: #304259;
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+
+      tr {
+        transition: background 160ms ease, box-shadow 160ms ease;
+      }
+
+      tr:hover {
+        background: #fff8ef;
+        box-shadow: inset 5px 0 0 var(--gold);
+      }
+
+      tfoot td {
+        background: #f6f9fd;
+        color: var(--ink);
+        font-weight: 800;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .status-good {
+        color: #175c3c;
+        background: #e8f7ef;
+      }
+
+      .status-bad {
+        color: #7c2622;
+        background: #fff0ed;
+      }
+
+      .section-kicker {
+        display: block;
+        margin-top: -8px;
+        margin-bottom: 18px;
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      .insight-strip {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .insight-tile {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 16px;
+        background:
+          linear-gradient(135deg, rgba(36, 87, 197, 0.12), rgba(255, 255, 255, 0.86)),
+          #ffffff;
+      }
+
+      .insight-tile:nth-child(2) {
+        background:
+          linear-gradient(135deg, rgba(0, 143, 134, 0.13), rgba(255, 255, 255, 0.88)),
+          #ffffff;
+      }
+
+      .insight-tile:nth-child(3) {
+        background:
+          linear-gradient(135deg, rgba(214, 122, 24, 0.15), rgba(255, 255, 255, 0.88)),
+          #ffffff;
+      }
+
+      .insight-label {
+        display: block;
+        color: #3a4b63;
+        font-size: 12px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .insight-value {
+        display: block;
+        color: var(--ink);
+        font-size: 26px;
+        font-weight: 900;
+        margin-top: 8px;
+      }
+
+      .summary-table-wrap,
+      .recovery-ledger {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #ffffff;
+        overflow: hidden;
+      }
+
+      .summary-table-wrap table,
+      .recovery-ledger table {
+        border: 0;
+        border-radius: 0;
+      }
+
+      .car-detail-section {
+        margin-top: 18px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background:
+          linear-gradient(180deg, rgba(36, 87, 197, 0.06), rgba(255, 255, 255, 0) 160px),
+          #ffffff;
+        padding: 18px;
+      }
+
+      .car-detail-section:first-child {
+        margin-top: 0;
+      }
+
+      .car-detail-head {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+
+      .car-detail-head h3 {
+        margin-bottom: 2px;
+      }
+
+      .mini-progress {
+        width: 180px;
+      }
+
+      .car-chart-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin: 14px 0 16px;
+      }
+
+      .chart-panel {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px;
+        background:
+          linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(238, 244, 255, 0.68)),
+          #ffffff;
+      }
+
+      .chart-panel h4 {
+        margin: 0 0 8px;
+        color: var(--ink);
+        font-size: 15px;
+      }
+
+      .chart-panel svg {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .chart-axis {
+        stroke: #9aa8ba;
+        stroke-width: 1;
+      }
+
+      .chart-grid-line {
+        stroke: #e3eaf3;
+        stroke-width: 1;
+      }
+
+      .chart-label {
+        fill: #596b80;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .chart-value {
+        fill: #334155;
+        font-size: 10px;
+        font-weight: 800;
+      }
+
+      .callout {
+        margin-top: 18px;
+        padding: 16px 18px;
+        border-left: 6px solid var(--teal);
+        border-radius: 8px;
+        background: #eefbf8;
+        color: #19534e;
+        font-size: 17px;
+        font-weight: 800;
+      }
+
+      .table-scroll {
+        overflow-x: auto;
+      }
+
+      .source {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .dashboard-switcher {
+        width: min(1240px, calc(100% - 32px));
+        margin: 18px auto 0;
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        box-shadow: 0 12px 30px rgba(29, 46, 73, 0.12);
+      }
+
+      .dashboard-switcher strong {
+        display: block;
+        margin-bottom: 10px;
+        color: var(--ink);
+        font-size: 14px;
+      }
+
+      .dashboard-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .dashboard-links a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 38px;
+        padding: 8px 11px;
+        border: 1px solid #c1cad8;
+        border-radius: 6px;
+        color: #1d2a39;
+        background: #ffffff;
+        font-size: 14px;
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .dashboard-links a:hover,
+      .dashboard-links a.active {
+        border-color: var(--blue);
+        background: #f4f8ff;
+        box-shadow: 0 8px 18px rgba(36, 87, 197, 0.16);
+      }
+
+      @media (max-width: 900px) {
+        .shell {
+          width: calc(100% - 20px);
+          margin-top: 10px;
+        }
+
+        .dashboard-switcher {
+          width: calc(100% - 20px);
+          margin-top: 10px;
+        }
+
+        .hero,
+        .month-view-head,
+        .car-detail-head,
+        .insight-strip,
+        .car-chart-grid,
+        .summary-grid,
+        .two-grid,
+        .three-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero,
+        .panel {
+          padding: 20px;
+        }
+
+        h1 {
+          font-size: 34px;
+        }
+      }
+
+      @media print {
+        body {
+          background: #ffffff;
+        }
+
+        .shell {
+          width: 100%;
+          margin: 0;
+        }
+
+        .controls,
+        .dashboard-switcher {
+          display: none;
+        }
+
+        .hero,
+        .panel {
+          box-shadow: none;
+          border-radius: 0;
+          page-break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="dashboard-switcher" aria-label="Dashboard navigation">
+      <strong>Dashboard Navigation</strong>
+      <div class="dashboard-links">
+        <a href="index.html">Home</a>
+        <a class="active" href="car-cost-profitability-dashboard.html">Cost & Profitability</a>
+        <a href="car-rental-monthly-dashboard.html">Monthly Dashboard</a>
+        <a href="car-rental-booking-utilization-dashboard.html">Booking Utilization</a>
+        <a href="car-rental-similar-business-research-report.html">Research Report</a>
+      </div>
+    </nav>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <div class="eyebrow">Car cost & profitability tracker</div>
+          <h1>Monthly profit and car-cost recovery, shown separately</h1>
+          <p class="subtitle">
+            This dashboard separates net P/L from vehicle purchase-cost recovery, using a 24-month payback plan for each car.
+          </p>
+        </div>
+        <div class="controls" id="printControls"></div>
+      </section>
+
+      <section class="grid summary-grid" id="summaryCards"></section>
+
+      <section class="panel">
+        <h2>Cost Per Car</h2>
+        <div class="grid two-grid" id="carCostCards"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Car Cost Recovery Progress</h2>
+        <div class="grid two-grid" id="carRecoveryCards"></div>
+        <div class="callout">
+          Recovery uses net P/L after expenses. If a car has a loss, that month does not recover purchase cost.
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="month-view-head">
+          <h2 id="monthTitle">Month Profit View</h2>
+          <div class="controls month-controls" id="monthControls"></div>
+        </div>
+        <div class="grid three-grid" id="monthCards"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Net P/L by Month</h2>
+        <div id="profitBars"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Car-Level Summary</h2>
+        <span class="section-kicker">Fast read on which car is carrying profit, recovery, and remaining cost.</span>
+        <div class="insight-strip" id="carSummaryHighlights"></div>
+        <div class="summary-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Car</th>
+                <th>Car Cost</th>
+                <th>Total Income</th>
+                <th>Expenses</th>
+                <th>Net P/L</th>
+                <th>Recovered So Far</th>
+                <th>Left Before Full Recovery</th>
+              </tr>
+            </thead>
+            <tbody id="carTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Monthly Recovery Analysis by Car</h2>
+        <span class="section-kicker">Unrecovered amounts and loss months roll into the next month, so every target stays honest as new months are added.</span>
+        <div id="carMonthlySections"></div>
+        <p class="source">
+          Recovery movement follows cumulative net P/L after expenses, so loss months reduce recovered cost. Not recovered shows the gap against that car's monthly recovery target, including any unpaid recovery and current-month loss carried forward. Profit after recovery appears only when cumulative net P/L is higher than the full recovery target for that month.
+        </p>
+      </section>
+
+      <section class="panel">
+        <h2>Current Data Used</h2>
+        <div class="grid two-grid">
+          <div class="card">
+            <h3>Car costs</h3>
+            <ul>
+              <li>Chevy Cruze: $7,400 total cost, 24-month target = $308.33/month.</li>
+              <li>Ford Mustang: $23,432 total cost, 24-month target = $976.33/month.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Income and expenses</h3>
+            <ul>
+              <li>Chevy income: Feb $76, Mar $360, Apr $324. Upcoming months default to $0 until entered.</li>
+              <li>Mustang income: Mar $260. Upcoming months default to $0 until entered.</li>
+              <li>Chevy recurring expenses: insurance $116.67/month, parking $35/month. March one-time maintenance/fuel/other expense $108.</li>
+              <li>Mustang recurring expenses: insurance $150/month.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const paybackMonths = 24;
+      const monthOrder = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const requiredMonthsThrough = "May";
+
+      const cars = [
+        {
+          name: "Chevy Cruze",
+          cost: 7400,
+          income: { Feb: 76, Mar: 360, Apr: 324 },
+          notes: {
+            Feb: "Took time to list on Turo; started execution in late Feb.",
+            Apr: "A single lease for 13 days by a single party.",
+            May: "Data not updated completely."
+          },
+          recurringExpenses: { insurance: 700 / 6, parking: 35, maintenanceFuel: 0 },
+          expenses: {
+            Mar: { maintenanceFuel: 108 }
+          }
+        },
+        {
+          name: "Ford Mustang",
+          cost: 23432,
+          income: { Mar: 260 },
+          recurringExpenses: { insurance: 900 / 6, parking: 0, maintenanceFuel: 0 },
+          expenses: {}
+        }
+      ];
+
+      let selectedMonth = "May";
+
+      const money = (value) =>
+        value.toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+      const percent = (value, digits = 1) => `${value.toFixed(digits)}%`;
+
+      const sum = (values) => values.reduce((total, value) => total + value, 0);
+      const monthIndex = (month) => monthOrder.indexOf(month);
+      const enteredMonths = () =>
+        cars.flatMap((car) => [...Object.keys(car.income || {}), ...Object.keys(car.expenses || {})]);
+      const latestMonthIndex = Math.max(monthIndex(requiredMonthsThrough), ...enteredMonths().map(monthIndex));
+      const months = monthOrder.slice(monthIndex("Feb"), latestMonthIndex + 1);
+      const carIncome = (car, month) => car.income[month] || 0;
+      const carExpenseBreakdown = (car, month) => ({
+        ...(car.recurringExpenses || {}),
+        ...(car.expenses[month] || {})
+      });
+      const carExpense = (car, month) => sum(Object.values(carExpenseBreakdown(car, month)));
+      const expensePart = (car, month, key) => carExpenseBreakdown(car, month)[key] || 0;
+      const carProfit = (car, month) => carIncome(car, month) - carExpense(car, month);
+      const recoveryTarget = (car) => car.cost / paybackMonths;
+      const totalCarProfit = (car) => sum(months.map((month) => carProfit(car, month)));
+      const recoverySchedule = (car) => {
+        let carriedNotRecovered = 0;
+        let cumulativeGrossProfit = 0;
+        let cumulativeRecovered = 0;
+        return months.map((month) => {
+          const profit = carProfit(car, month);
+          const baseTarget = recoveryTarget(car);
+          const target = baseTarget + carriedNotRecovered;
+          cumulativeGrossProfit += profit;
+          const recoveredAfterMonth = Math.min(Math.max(cumulativeGrossProfit, 0), car.cost);
+          const recoveryMovement = recoveredAfterMonth - cumulativeRecovered;
+          const notRecovered = Math.max(target - profit, 0);
+          const profitAfterRecovery = Math.max(cumulativeGrossProfit - target, 0);
+          cumulativeRecovered = recoveredAfterMonth;
+          carriedNotRecovered = notRecovered;
+          return { month, profit, baseTarget, target, recoveryMovement, recoveredAfterMonth, notRecovered, profitAfterRecovery };
+        });
+      };
+      const recoveredSoFar = (car) => {
+        const schedule = recoverySchedule(car);
+        return schedule.length ? schedule[schedule.length - 1].recoveredAfterMonth : 0;
+      };
+      const totalIncome = () => sum(cars.flatMap((car) => months.map((month) => carIncome(car, month))));
+      const totalExpense = () => sum(cars.flatMap((car) => months.map((month) => carExpense(car, month))));
+      const totalProfit = () => totalIncome() - totalExpense();
+      const totalCost = () => sum(cars.map((car) => car.cost));
+      const totalRecovered = () => sum(cars.map(recoveredSoFar));
+      const monthIncome = (month) => sum(cars.map((car) => carIncome(car, month)));
+      const monthExpense = (month) => sum(cars.map((car) => carExpense(car, month)));
+      const monthProfit = (month) => monthIncome(month) - monthExpense(month);
+
+      function renderControls() {
+        const controls = document.getElementById("monthControls");
+        controls.innerHTML = "";
+        months.forEach((month) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = month;
+          button.className = month === selectedMonth ? "active" : "";
+          button.addEventListener("click", () => {
+            selectedMonth = month;
+            render();
+          });
+          controls.appendChild(button);
+        });
+      }
+
+      function renderPrintControls() {
+        const controls = document.getElementById("printControls");
+        controls.innerHTML = "";
+        const printButton = document.createElement("button");
+        printButton.type = "button";
+        printButton.textContent = "Print / Save PDF";
+        printButton.addEventListener("click", () => window.print());
+        controls.appendChild(printButton);
+      }
+
+      function renderSummaryCards() {
+        const profit = totalProfit();
+        const recovered = totalRecovered();
+        const left = totalCost() - recovered;
+        const overallRecoveryProgress = (recovered / totalCost()) * 100;
+        const cards = [
+          ["Total car cost", money(totalCost()), "Chevy Cruze + Ford Mustang", "warn"],
+          ["Net P/L", money(profit), "Income minus expenses entered so far", profit >= 0 ? "good" : "bad"],
+          ["Overall recovery progress", percent(overallRecoveryProgress, 2), `${money(recovered)} recovered of ${money(totalCost())}`, recovered > 0 ? "good" : "warn"],
+          ["Left to recover", money(left), "Remaining vehicle cost before full recovery", "bad"]
+        ];
+
+        document.getElementById("summaryCards").innerHTML = cards
+          .map(
+            ([label, value, note, tone]) => `
+              <div class="card">
+                <span class="metric-label">${label}</span>
+                <strong class="metric-value ${tone}">${value}</strong>
+                <span class="metric-note">${note}</span>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function renderCarCostCards() {
+        document.getElementById("carCostCards").innerHTML = cars
+          .map(
+            (car) => {
+              const fleetCostShare = (car.cost / totalCost()) * 100;
+              return `
+              <div class="card">
+                <span class="metric-label">${car.name}</span>
+                <strong class="metric-value">${money(car.cost)}</strong>
+                <span class="metric-note">${percent(fleetCostShare)} of total fleet cost</span>
+                <div class="progress-track">
+                  <div class="progress-bar" style="width: ${fleetCostShare}%"></div>
+                </div>
+                <p>24-month monthly recovery target: <strong>${money(recoveryTarget(car))}</strong></p>
+              </div>
+            `;
+            }
+          )
+          .join("");
+      }
+
+      function renderRecoveryCards() {
+        document.getElementById("carRecoveryCards").innerHTML = cars
+          .map((car) => {
+            const recovered = recoveredSoFar(car);
+            const left = car.cost - recovered;
+            const progress = (recovered / car.cost) * 100;
+            const barClass = progress >= 20 ? "" : "low";
+            return `
+              <div class="card">
+                <span class="metric-label">${car.name}</span>
+                <strong class="metric-value">${percent(progress)}</strong>
+                <span class="metric-note">${money(recovered)} recovered of ${money(car.cost)}</span>
+                <div class="progress-track">
+                  <div class="progress-bar ${barClass}" style="width: ${Math.max(progress, 1)}%"></div>
+                </div>
+                <p>
+                  Monthly recovery target: <strong>${money(recoveryTarget(car))}</strong><br />
+                  Left before full recovery: <strong>${money(left)}</strong>
+                </p>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderMonthView() {
+        const income = monthIncome(selectedMonth);
+        const expense = monthExpense(selectedMonth);
+        const profit = monthProfit(selectedMonth);
+        const expenseSplit = cars.map((car) => `${car.name}: ${money(carExpense(car, selectedMonth))}`).join("<br />");
+        document.getElementById("monthTitle").textContent = `${selectedMonth} Profit View`;
+        document.getElementById("monthCards").innerHTML = [
+          ["Income", money(income), "Fleet income entered for this month", income > 0 ? "good" : "bad"],
+          ["Expenses", money(expense), "Fleet total across all cars", "warn"],
+          ["Net P/L", money(profit), "Fleet income minus fleet expenses", profit >= 0 ? "good" : "bad"],
+          ["Expense split", "By car", expenseSplit, "warn"]
+        ]
+          .map(
+            ([label, value, note, tone]) => `
+              <div class="card">
+                <span class="metric-label">${label}</span>
+                <strong class="metric-value ${tone}">${value}</strong>
+                <span class="metric-note">${note}</span>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function renderProfitBars() {
+        const values = months.map((month) => ({ month, value: monthProfit(month) }));
+        const max = Math.max(...values.map((item) => Math.abs(item.value)), 1);
+        document.getElementById("profitBars").innerHTML = values
+          .map((item) => {
+            const width = (Math.abs(item.value) / max) * 100;
+            const lossClass = item.value < 0 ? "loss" : "";
+            return `
+              <div class="bar-row">
+                <strong>${item.month}</strong>
+                <div class="bar-track"><div class="bar ${lossClass}" style="width: ${width}%"></div></div>
+                <span class="${item.value >= 0 ? "good" : "bad"}">${money(item.value)}</span>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderCarTable() {
+        const mostRecoveredCar = cars.reduce((best, car) => (recoveredSoFar(car) > recoveredSoFar(best) ? car : best), cars[0]);
+        const bestProfitCar = cars.reduce((best, car) => (totalCarProfit(car) > totalCarProfit(best) ? car : best), cars[0]);
+        const totalRemaining = totalCost() - totalRecovered();
+        document.getElementById("carSummaryHighlights").innerHTML = [
+          ["Top net P/L", bestProfitCar.name, money(totalCarProfit(bestProfitCar))],
+          ["Most recovered", mostRecoveredCar.name, `${percent((recoveredSoFar(mostRecoveredCar) / mostRecoveredCar.cost) * 100)} complete`],
+          ["Still to recover", money(totalRemaining), "Across all cars"]
+        ]
+          .map(
+            ([label, value, note]) => `
+              <div class="insight-tile">
+                <span class="insight-label">${label}</span>
+                <strong class="insight-value">${value}</strong>
+                <span class="metric-note">${note}</span>
+              </div>
+            `
+          )
+          .join("");
+
+        const rows = cars.map((car) => {
+            const income = sum(months.map((month) => carIncome(car, month)));
+            const expense = sum(months.map((month) => carExpense(car, month)));
+            const profit = income - expense;
+            const recovered = recoveredSoFar(car);
+            const left = car.cost - recovered;
+            return `
+              <tr>
+                <td><strong>${car.name}</strong></td>
+                <td>${money(car.cost)}</td>
+                <td>${money(income)}</td>
+                <td>${money(expense)}</td>
+                <td class="${profit >= 0 ? "good" : "bad"}">${money(profit)}</td>
+                <td>${money(recovered)}</td>
+                <td>${money(left)}</td>
+              </tr>
+            `;
+          });
+        const combinedIncome = totalIncome();
+        const combinedExpense = totalExpense();
+        const combinedProfit = totalProfit();
+        const combinedRecovered = totalRecovered();
+        const combinedLeft = totalCost() - combinedRecovered;
+        rows.push(`
+          <tr>
+            <td><strong>Combined</strong></td>
+            <td><strong>${money(totalCost())}</strong></td>
+            <td><strong>${money(combinedIncome)}</strong></td>
+            <td><strong>${money(combinedExpense)}</strong></td>
+            <td class="${combinedProfit >= 0 ? "good" : "bad"}"><strong>${money(combinedProfit)}</strong></td>
+            <td><strong>${money(combinedRecovered)}</strong></td>
+            <td><strong>${money(combinedLeft)}</strong></td>
+          </tr>
+        `);
+
+        document.getElementById("carTable").innerHTML = rows.join("");
+      }
+
+      function compactMoney(value) {
+        const sign = value < 0 ? "-" : "";
+        return `${sign}$${Math.abs(value).toFixed(0)}`;
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function chartY(value, minValue, maxValue, top, plotHeight) {
+        if (maxValue === minValue) {
+          return top + plotHeight / 2;
+        }
+        return top + ((maxValue - value) / (maxValue - minValue)) * plotHeight;
+      }
+
+      function renderCarCharts(car) {
+        const width = 560;
+        const height = 260;
+        const left = 46;
+        const right = 18;
+        const top = 22;
+        const bottom = 38;
+        const plotWidth = width - left - right;
+        const plotHeight = height - top - bottom;
+        const profits = months.map((month) => ({ month, value: carProfit(car, month) }));
+        const maxAbsProfit = Math.max(...profits.map((item) => Math.abs(item.value)), 1);
+        const barMin = -maxAbsProfit;
+        const barMax = maxAbsProfit;
+        const barZeroY = chartY(0, barMin, barMax, top, plotHeight);
+        const barSlot = plotWidth / profits.length;
+        const barWidth = Math.min(54, barSlot * 0.46);
+
+        let cumulative = 0;
+        const cumulativeValues = profits.map((item) => {
+          cumulative += item.value;
+          return { month: item.month, value: cumulative };
+        });
+        const lineMin = Math.min(0, ...cumulativeValues.map((item) => item.value));
+        const lineMax = Math.max(0, ...cumulativeValues.map((item) => item.value));
+        const linePadding = Math.max((lineMax - lineMin) * 0.12, 25);
+        const adjustedLineMin = lineMin - linePadding;
+        const adjustedLineMax = lineMax + linePadding;
+        const lineZeroY = chartY(0, adjustedLineMin, adjustedLineMax, top, plotHeight);
+        const lineStep = profits.length > 1 ? plotWidth / (profits.length - 1) : plotWidth;
+        const points = cumulativeValues
+          .map((item, index) => `${left + index * lineStep},${chartY(item.value, adjustedLineMin, adjustedLineMax, top, plotHeight)}`)
+          .join(" ");
+
+        const barSvg = `
+          <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${car.name} monthly profit and loss bar chart">
+            <line class="chart-grid-line" x1="${left}" y1="${top}" x2="${width - right}" y2="${top}"></line>
+            <line class="chart-grid-line" x1="${left}" y1="${height - bottom}" x2="${width - right}" y2="${height - bottom}"></line>
+            <line class="chart-axis" x1="${left}" y1="${barZeroY}" x2="${width - right}" y2="${barZeroY}"></line>
+            <text class="chart-label" x="8" y="${barZeroY - 6}">$0</text>
+            ${profits
+              .map((item, index) => {
+                const x = left + index * barSlot + (barSlot - barWidth) / 2;
+                const y = chartY(item.value, barMin, barMax, top, plotHeight);
+                const rectY = Math.min(y, barZeroY);
+                const rectHeight = Math.max(Math.abs(barZeroY - y), 2);
+                const color = item.value >= 0 ? "var(--green)" : "var(--red)";
+                const valueY = item.value >= 0 ? rectY - 6 : rectY + rectHeight + 14;
+                const note = car.notes && car.notes[item.month] ? `\nNote: ${car.notes[item.month]}` : "";
+                const tooltip = `${car.name} ${item.month}\nP/L: ${money(item.value)}${note}`;
+                return `
+                  <rect x="${x}" y="${rectY}" width="${barWidth}" height="${rectHeight}" rx="5" fill="${color}">
+                    <title>${escapeHtml(tooltip)}</title>
+                  </rect>
+                  <text class="chart-value" x="${x + barWidth / 2}" y="${valueY}" text-anchor="middle">${compactMoney(item.value)}</text>
+                  <text class="chart-label" x="${x + barWidth / 2}" y="${height - 12}" text-anchor="middle">${item.month}</text>
+                `;
+              })
+              .join("")}
+          </svg>
+        `;
+
+        const lineSvg = `
+          <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="${car.name} cumulative net profit line chart">
+            <line class="chart-grid-line" x1="${left}" y1="${top}" x2="${width - right}" y2="${top}"></line>
+            <line class="chart-grid-line" x1="${left}" y1="${height - bottom}" x2="${width - right}" y2="${height - bottom}"></line>
+            <line class="chart-axis" x1="${left}" y1="${lineZeroY}" x2="${width - right}" y2="${lineZeroY}"></line>
+            <text class="chart-label" x="8" y="${lineZeroY - 6}">$0</text>
+            <polyline points="${points}" fill="none" stroke="var(--blue)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            ${cumulativeValues
+              .map((item, index) => {
+                const x = left + index * lineStep;
+                const y = chartY(item.value, adjustedLineMin, adjustedLineMax, top, plotHeight);
+                return `
+                  <circle cx="${x}" cy="${y}" r="5" fill="${item.value >= 0 ? "var(--green)" : "var(--red)"}" stroke="#ffffff" stroke-width="2"></circle>
+                  <text class="chart-value" x="${x}" y="${y - 10}" text-anchor="middle">${compactMoney(item.value)}</text>
+                  <text class="chart-label" x="${x}" y="${height - 12}" text-anchor="middle">${item.month}</text>
+                `;
+              })
+              .join("")}
+          </svg>
+        `;
+
+        return `
+          <div class="car-chart-grid">
+            <div class="chart-panel">
+              <h4>Monthly P/L</h4>
+              ${barSvg}
+            </div>
+            <div class="chart-panel">
+              <h4>Cumulative Net Profit</h4>
+              ${lineSvg}
+            </div>
+          </div>
+        `;
+      }
+
+      function renderCarMonthlySections() {
+        document.getElementById("carMonthlySections").innerHTML = cars
+          .map((car) => {
+            const schedule = recoverySchedule(car);
+            const rows = schedule
+              .map((item) => {
+                const status =
+                  item.profitAfterRecovery > 0
+                    ? { label: "Profit after recovery", className: "status-good" }
+                    : item.recoveryMovement > 0
+                      ? { label: "Recovery gained", className: "status-good" }
+                      : item.recoveryMovement < 0
+                        ? { label: "Recovery reduced", className: "status-bad" }
+                        : { label: "No recovery", className: "status-bad" };
+                return `
+                  <tr>
+                    <td><strong>${item.month}</strong></td>
+                    <td>${money(carIncome(car, item.month))}</td>
+                    <td>${money(expensePart(car, item.month, "insurance"))}</td>
+                    <td>${money(expensePart(car, item.month, "parking"))}</td>
+                    <td>${money(expensePart(car, item.month, "maintenanceFuel"))}</td>
+                    <td>${money(carExpense(car, item.month))}</td>
+                    <td class="${item.profit >= 0 ? "good" : "bad"}">${money(item.profit)}</td>
+                    <td>${money(item.baseTarget)}</td>
+                    <td>${money(item.target)}</td>
+                    <td class="${item.recoveredAfterMonth > 0 ? "good" : "bad"}">${money(item.recoveredAfterMonth)}</td>
+                    <td class="${item.notRecovered > 0 ? "bad" : "good"}">${money(item.notRecovered)}</td>
+                    <td class="${item.profitAfterRecovery > 0 ? "good" : "bad"}">${money(item.profitAfterRecovery)}</td>
+                    <td><span class="status-pill ${status.className}">${status.label}</span></td>
+                  </tr>
+                `;
+              })
+              .join("");
+            const totals = schedule.reduce(
+              (acc, month) => {
+                acc.income += carIncome(car, month.month);
+                acc.insurance += expensePart(car, month.month, "insurance");
+                acc.parking += expensePart(car, month.month, "parking");
+                acc.maintenanceFuel += expensePart(car, month.month, "maintenanceFuel");
+                acc.expenses += carExpense(car, month.month);
+                acc.profit += month.profit;
+                acc.baseTarget += month.baseTarget;
+                acc.target = month.target;
+                acc.recovered += month.recoveryMovement;
+                acc.notRecovered = month.notRecovered;
+                acc.profitAfterRecovery += month.profitAfterRecovery;
+                return acc;
+              },
+              { income: 0, insurance: 0, parking: 0, maintenanceFuel: 0, expenses: 0, profit: 0, baseTarget: 0, target: 0, recovered: 0, notRecovered: 0, profitAfterRecovery: 0 }
+            );
+            const recovered = recoveredSoFar(car);
+            const progress = (recovered / car.cost) * 100;
+
+            return `
+              <div class="car-detail-section">
+                <div class="car-detail-head">
+                  <div>
+                    <h3>${car.name}</h3>
+                    <span class="metric-note">${money(recovered)} recovered, ${money(car.cost - recovered)} left</span>
+                  </div>
+                  <div class="mini-progress">
+                    <span class="metric-label">${percent(progress)} recovered</span>
+                    <div class="progress-track">
+                      <div class="progress-bar ${progress >= 20 ? "" : "low"}" style="width: ${Math.max(progress, 1)}%"></div>
+                    </div>
+                  </div>
+                </div>
+                ${renderCarCharts(car)}
+                <div class="table-scroll recovery-ledger">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Month</th>
+                        <th>Income</th>
+                        <th>Insurance</th>
+                        <th>Parking</th>
+                        <th>Maintenance / Fuel</th>
+                        <th>Total Expenses</th>
+                        <th>Net P/L</th>
+                        <th>Monthly Target</th>
+                        <th>Target With Carryover</th>
+                        <th>Recovered So Far</th>
+                        <th>Not Recovered</th>
+                        <th>Profit After Recovery</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                    <tfoot>
+                      <tr>
+                        <td>Total</td>
+                        <td>${money(totals.income)}</td>
+                        <td>${money(totals.insurance)}</td>
+                        <td>${money(totals.parking)}</td>
+                        <td>${money(totals.maintenanceFuel)}</td>
+                        <td>${money(totals.expenses)}</td>
+                        <td class="${totals.profit >= 0 ? "good" : "bad"}">${money(totals.profit)}</td>
+                        <td>${money(totals.baseTarget)}</td>
+                        <td>${money(totals.target)}</td>
+                        <td>${money(totals.recovered)}</td>
+                        <td class="${totals.notRecovered > 0 ? "bad" : "good"}">${money(totals.notRecovered)}</td>
+                        <td class="${totals.profitAfterRecovery > 0 ? "good" : "bad"}">${money(totals.profitAfterRecovery)}</td>
+                        <td>${totals.recovered > 0 ? "Recovered from cumulative net P/L" : "No cumulative recovery"}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function render() {
+        renderControls();
+        renderPrintControls();
+        renderSummaryCards();
+        renderCarCostCards();
+        renderRecoveryCards();
+        renderMonthView();
+        renderProfitBars();
+        renderCarTable();
+        renderCarMonthlySections();
+      }
+
+      render();
+    </script>
+  </body>
+</html>
+

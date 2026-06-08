@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Car Booking Utilization Dashboard</title>
+    <style>
+      :root {
+        --ink: #152033;
+        --muted: #647287;
+        --paper: #fbfcff;
+        --panel: #ffffff;
+        --line: #dce4ef;
+        --blue: #2457c5;
+        --teal: #008f86;
+        --gold: #d67a18;
+        --red: #c3423f;
+        --green: #238957;
+        --idle: #d9e0eb;
+        --shadow: 0 16px 40px rgba(29, 46, 73, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          linear-gradient(135deg, rgba(36, 87, 197, 0.16), rgba(0, 143, 134, 0.12), rgba(214, 122, 24, 0.1)),
+          #edf2f8;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .shell {
+        width: min(1240px, calc(100% - 32px));
+        margin: 24px auto 48px;
+      }
+
+      .hero,
+      .panel,
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 24px;
+        align-items: center;
+        padding: 34px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, rgba(36, 87, 197, 0.08), rgba(0, 143, 134, 0.06), rgba(214, 122, 24, 0.08));
+        pointer-events: none;
+      }
+
+      .hero > * {
+        position: relative;
+      }
+
+      .eyebrow {
+        color: var(--teal);
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        letter-spacing: 0;
+      }
+
+      h1 {
+        max-width: 760px;
+        font-size: 46px;
+        line-height: 1.05;
+      }
+
+      h2 {
+        font-size: 28px;
+        margin-bottom: 16px;
+      }
+
+      h3 {
+        font-size: 18px;
+        margin-bottom: 8px;
+      }
+
+      p,
+      li,
+      td,
+      span {
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.45;
+      }
+
+      .subtitle {
+        max-width: 760px;
+        margin: 14px 0 0;
+        font-size: 18px;
+      }
+
+      .controls {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        border: 1px solid #c1cad8;
+        background: #ffffff;
+        color: #1d2a39;
+        border-radius: 6px;
+        padding: 9px 12px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+      }
+
+      button:hover,
+      button.active {
+        border-color: var(--blue);
+        background: #f4f8ff;
+        box-shadow: 0 8px 18px rgba(36, 87, 197, 0.16);
+        transform: translateY(-1px);
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+        margin-top: 18px;
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .two-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .panel {
+        padding: 24px;
+        margin-top: 18px;
+      }
+
+      .card {
+        padding: 20px;
+        transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+      }
+
+      .card:hover,
+      .calendar-day:hover,
+      tr:hover {
+        transform: translateY(-4px);
+        border-color: rgba(36, 87, 197, 0.42);
+        box-shadow: 0 18px 34px rgba(35, 50, 72, 0.13);
+      }
+
+      .metric-label {
+        display: block;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .metric-value {
+        display: block;
+        color: var(--blue);
+        font-size: 34px;
+        font-weight: 800;
+        line-height: 1;
+        margin-top: 10px;
+      }
+
+      .metric-note {
+        display: block;
+        margin-top: 8px;
+      }
+
+      .good {
+        color: var(--green);
+      }
+
+      .warn {
+        color: var(--gold);
+      }
+
+      .bad {
+        color: var(--red);
+      }
+
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+      }
+
+      .weekday {
+        color: #304259;
+        font-size: 12px;
+        font-weight: 800;
+        text-align: center;
+        text-transform: uppercase;
+      }
+
+      .calendar-day {
+        min-height: 72px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 8px;
+        background: #ffffff;
+        transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+      }
+
+      .calendar-day.empty {
+        background: transparent;
+        border-color: transparent;
+        box-shadow: none;
+      }
+
+      .calendar-day.booked {
+        background: #eaf8f0;
+        border-color: rgba(35, 137, 87, 0.45);
+      }
+
+      .calendar-day.idle {
+        background: #f4f7fb;
+      }
+
+      .calendar-day.service {
+        background: #fff3df;
+        border-color: rgba(214, 122, 24, 0.5);
+      }
+
+      .calendar-day.open {
+        background: #eef4ff;
+        border-color: rgba(36, 87, 197, 0.32);
+      }
+
+      .day-number {
+        color: var(--ink);
+        font-size: 14px;
+        font-weight: 800;
+      }
+
+      .day-status {
+        display: block;
+        margin-top: 10px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .legend-item {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-weight: 800;
+      }
+
+      .swatch {
+        width: 14px;
+        height: 14px;
+        border-radius: 4px;
+        border: 1px solid var(--line);
+      }
+
+      .swatch.booked {
+        background: #eaf8f0;
+        border-color: rgba(35, 137, 87, 0.45);
+      }
+
+      .swatch.idle {
+        background: #f4f7fb;
+      }
+
+      .swatch.service {
+        background: #fff3df;
+        border-color: rgba(214, 122, 24, 0.5);
+      }
+
+      .swatch.open {
+        background: #eef4ff;
+        border-color: rgba(36, 87, 197, 0.32);
+      }
+
+      .bar-row {
+        display: grid;
+        grid-template-columns: 90px 1fr 68px;
+        gap: 12px;
+        align-items: center;
+        margin: 13px 0;
+      }
+
+      .bar-track {
+        height: 20px;
+        background: #edf2f8;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .bar {
+        height: 100%;
+        min-width: 2px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--green), var(--teal));
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      th,
+      td {
+        padding: 13px 14px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+      }
+
+      th {
+        background: linear-gradient(90deg, #eef4ff, #edf9f7);
+        color: #304259;
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+
+      tr {
+        transition: background 160ms ease, box-shadow 160ms ease;
+      }
+
+      tr:hover {
+        background: #fff8ef;
+        box-shadow: inset 5px 0 0 var(--gold);
+      }
+
+      .callout {
+        margin-top: 18px;
+        padding: 16px 18px;
+        border-left: 6px solid var(--teal);
+        border-radius: 8px;
+        background: #eefbf8;
+        color: #19534e;
+        font-size: 17px;
+        font-weight: 800;
+      }
+
+      .dashboard-switcher {
+        width: min(1240px, calc(100% - 32px));
+        margin: 18px auto 0;
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        box-shadow: 0 12px 30px rgba(29, 46, 73, 0.12);
+      }
+
+      .dashboard-switcher strong {
+        display: block;
+        margin-bottom: 10px;
+        color: var(--ink);
+        font-size: 14px;
+      }
+
+      .dashboard-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .dashboard-links a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 38px;
+        padding: 8px 11px;
+        border: 1px solid #c1cad8;
+        border-radius: 6px;
+        color: #1d2a39;
+        background: #ffffff;
+        font-size: 14px;
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .dashboard-links a:hover,
+      .dashboard-links a.active {
+        border-color: var(--blue);
+        background: #f4f8ff;
+        box-shadow: 0 8px 18px rgba(36, 87, 197, 0.16);
+      }
+
+      @media (max-width: 900px) {
+        .shell {
+          width: calc(100% - 20px);
+          margin-top: 10px;
+        }
+
+        .dashboard-switcher {
+          width: calc(100% - 20px);
+          margin-top: 10px;
+        }
+
+        .hero,
+        .summary-grid,
+        .two-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hero,
+        .panel {
+          padding: 20px;
+        }
+
+        h1 {
+          font-size: 34px;
+        }
+
+        .calendar-day {
+          min-height: 54px;
+          padding: 6px;
+        }
+      }
+
+      @media print {
+        body {
+          background: #ffffff;
+        }
+
+        .shell {
+          width: 100%;
+          margin: 0;
+        }
+
+        .controls,
+        .dashboard-switcher {
+          display: none;
+        }
+
+        .hero,
+        .panel {
+          box-shadow: none;
+          border-radius: 0;
+          page-break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="dashboard-switcher" aria-label="Dashboard navigation">
+      <strong>Dashboard Navigation</strong>
+      <div class="dashboard-links">
+        <a href="index.html">Home</a>
+        <a href="car-cost-profitability-dashboard.html">Cost & Profitability</a>
+        <a href="car-rental-monthly-dashboard.html">Monthly Dashboard</a>
+        <a class="active" href="car-rental-booking-utilization-dashboard.html">Booking Utilization</a>
+        <a href="car-rental-similar-business-research-report.html">Research Report</a>
+      </div>
+    </nav>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <div class="eyebrow">Booking utilization dashboard</div>
+          <h1>How much the car is booked vs sitting idle</h1>
+          <p class="subtitle">
+            A month-by-month booking view to understand utilization, idle days, and where we can push for better monthly performance.
+          </p>
+        </div>
+        <div class="controls" id="monthControls"></div>
+      </section>
+
+      <section class="grid summary-grid" id="summaryCards"></section>
+
+      <section class="panel">
+        <h2 id="calendarTitle">Monthly Calendar</h2>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <div class="legend">
+          <span class="legend-item"><span class="swatch booked"></span> Booked</span>
+          <span class="legend-item"><span class="swatch idle"></span> Idle</span>
+          <span class="legend-item"><span class="swatch service"></span> Service / unavailable</span>
+          <span class="legend-item"><span class="swatch open"></span> Upcoming open days</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Monthly Utilization Trend</h2>
+        <div id="utilizationBars"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Booking Summary</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Available Days</th>
+              <th>Booked Days</th>
+              <th>Idle Days</th>
+              <th>Utilization</th>
+            </tr>
+          </thead>
+          <tbody id="summaryTable"></tbody>
+        </table>
+        <div class="callout" id="insightBox"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Booking Ranges Entered</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Booking</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Booked Days</th>
+            </tr>
+          </thead>
+          <tbody id="bookingTable"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <script>
+      const year = 2026;
+      const months = [
+        { key: "Feb", index: 1, label: "February" },
+        { key: "Mar", index: 2, label: "March" },
+        { key: "Apr", index: 3, label: "April" },
+        { key: "May", index: 4, label: "May" }
+      ];
+
+      const bookings = [
+        { start: "2026-02-28", end: "2026-03-01" },
+        { start: "2026-03-02", end: "2026-03-07" },
+        { start: "2026-03-11", end: "2026-03-16" },
+        { start: "2026-04-05", end: "2026-04-08" },
+        { start: "2026-04-11", end: "2026-04-23" },
+        { start: "2026-04-25", end: "2026-04-28" },
+        { start: "2026-04-30", end: "2026-05-04" }
+      ];
+
+      const serviceDates = [];
+      const currentDate = new Date(2026, 4, 18);
+      let selectedMonth = "Apr";
+
+      const dateKey = (date) => date.toISOString().slice(0, 10);
+      const parseDate = (value) => {
+        const [y, m, d] = value.split("-").map(Number);
+        return new Date(y, m - 1, d);
+      };
+      const daysInMonth = (monthIndex) => new Date(year, monthIndex + 1, 0).getDate();
+      const fmt = (value) => {
+        const date = parseDate(value);
+        return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      };
+      const percent = (value) => `${Math.round(value)}%`;
+
+      function eachDate(start, end) {
+        const dates = [];
+        const current = parseDate(start);
+        const last = parseDate(end);
+        while (current <= last) {
+          dates.push(dateKey(current));
+          current.setDate(current.getDate() + 1);
+        }
+        return dates;
+      }
+
+      const bookedSet = new Set(bookings.flatMap((booking) => eachDate(booking.start, booking.end)));
+      const serviceSet = new Set(serviceDates);
+
+      function monthStats(month) {
+        const totalDays = daysInMonth(month.index);
+        const monthEnd = new Date(year, month.index, totalDays);
+        const countedEnd = monthEnd > currentDate ? currentDate : monthEnd;
+        const countedDays = countedEnd.getMonth() === month.index ? countedEnd.getDate() : totalDays;
+        let bookedDays = 0;
+        let serviceDays = 0;
+        for (let day = 1; day <= countedDays; day += 1) {
+          const key = dateKey(new Date(year, month.index, day));
+          if (bookedSet.has(key)) bookedDays += 1;
+          if (serviceSet.has(key)) serviceDays += 1;
+        }
+        const availableDays = countedDays - serviceDays;
+        const idleDays = availableDays - bookedDays;
+        const utilization = availableDays ? (bookedDays / availableDays) * 100 : 0;
+        const upcomingOpenDays = totalDays - countedDays;
+        return { totalDays, countedDays, availableDays, bookedDays, idleDays, serviceDays, upcomingOpenDays, utilization };
+      }
+
+      function renderControls() {
+        const controls = document.getElementById("monthControls");
+        controls.innerHTML = "";
+        months.forEach((month) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = month.key;
+          button.className = selectedMonth === month.key ? "active" : "";
+          button.addEventListener("click", () => {
+            selectedMonth = month.key;
+            render();
+          });
+          controls.appendChild(button);
+        });
+        const printButton = document.createElement("button");
+        printButton.type = "button";
+        printButton.textContent = "Print / Save PDF";
+        printButton.addEventListener("click", () => window.print());
+        controls.appendChild(printButton);
+      }
+
+      function renderSummaryCards() {
+        const totals = months.reduce(
+          (acc, month) => {
+            const stats = monthStats(month);
+            acc.available += stats.availableDays;
+            acc.booked += stats.bookedDays;
+            acc.idle += stats.idleDays;
+            return acc;
+          },
+          { available: 0, booked: 0, idle: 0 }
+        );
+        const utilization = totals.available ? (totals.booked / totals.available) * 100 : 0;
+        const bestMonth = months
+          .map((month) => ({ month, stats: monthStats(month) }))
+          .sort((a, b) => b.stats.utilization - a.stats.utilization)[0];
+
+        const cards = [
+          ["Total booked days", totals.booked, "Across Feb-May booking data", "good"],
+          ["Total idle days", totals.idle, "Days available but not booked", "bad"],
+          ["Overall utilization", percent(utilization), "Booked days divided by available days", utilization >= 50 ? "good" : "warn"],
+          ["Best month", bestMonth.month.key, `${percent(bestMonth.stats.utilization)} utilization`, "good"]
+        ];
+
+        document.getElementById("summaryCards").innerHTML = cards
+          .map(
+            ([label, value, note, tone]) => `
+              <div class="card">
+                <span class="metric-label">${label}</span>
+                <strong class="metric-value ${tone}">${value}</strong>
+                <span class="metric-note">${note}</span>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function renderCalendar() {
+        const month = months.find((item) => item.key === selectedMonth);
+        const stats = monthStats(month);
+        document.getElementById("calendarTitle").textContent = `${month.label} Booking Calendar`;
+
+        const firstDay = new Date(year, month.index, 1).getDay();
+        const cells = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => `<div class="weekday">${day}</div>`);
+        for (let i = 0; i < firstDay; i += 1) cells.push('<div class="calendar-day empty"></div>');
+
+        for (let day = 1; day <= stats.totalDays; day += 1) {
+          const key = dateKey(new Date(year, month.index, day));
+          const calendarDate = new Date(year, month.index, day);
+          const isBooked = bookedSet.has(key);
+          const isService = serviceSet.has(key);
+          const isFuture = calendarDate > currentDate;
+          const statusClass = isFuture ? "open" : isService ? "service" : isBooked ? "booked" : "idle";
+          const statusLabel = isFuture ? "Open" : isService ? "Service" : isBooked ? "Booked" : "Idle";
+          cells.push(`
+            <div class="calendar-day ${statusClass}">
+              <div class="day-number">${day}</div>
+              <span class="day-status">${statusLabel}</span>
+            </div>
+          `);
+        }
+
+        document.getElementById("calendarGrid").innerHTML = cells.join("");
+      }
+
+      function renderBars() {
+        document.getElementById("utilizationBars").innerHTML = months
+          .map((month) => {
+            const stats = monthStats(month);
+            return `
+              <div class="bar-row">
+                <strong>${month.key}</strong>
+                <div class="bar-track"><div class="bar" style="width: ${stats.utilization}%"></div></div>
+                <span>${percent(stats.utilization)}</span>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderTables() {
+        document.getElementById("summaryTable").innerHTML = months
+          .map((month) => {
+            const stats = monthStats(month);
+            return `
+              <tr>
+                <td><strong>${month.label}</strong></td>
+                <td>${stats.availableDays}</td>
+                <td>${stats.bookedDays}</td>
+                <td>${stats.idleDays}</td>
+                <td class="${stats.utilization >= 50 ? "good" : "warn"}">${percent(stats.utilization)}</td>
+              </tr>
+            `;
+          })
+          .join("");
+
+        document.getElementById("bookingTable").innerHTML = bookings
+          .map((booking, index) => {
+            const days = eachDate(booking.start, booking.end).length;
+            return `
+              <tr>
+                <td><strong>Booking ${index + 1}</strong></td>
+                <td>${fmt(booking.start)}</td>
+                <td>${fmt(booking.end)}</td>
+                <td>${days}</td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function renderInsight() {
+        const apr = monthStats(months.find((month) => month.key === "Apr"));
+        const may = monthStats(months.find((month) => month.key === "May"));
+        document.getElementById("insightBox").textContent =
+          `April is the strongest month so far with ${apr.bookedDays} booked days and ${percent(apr.utilization)} utilization. May currently has ${may.bookedDays} booked days through May 18, with ${may.upcomingOpenDays} upcoming open days left to fill through monthly rentals, weekday pricing, or targeted local offers.`;
+      }
+
+      function render() {
+        renderControls();
+        renderSummaryCards();
+        renderCalendar();
+        renderBars();
+        renderTables();
+        renderInsight();
+      }
+
+      render();
+    </script>
+  </body>
+</html>

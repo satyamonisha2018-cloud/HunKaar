@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Car Rental Monthly Dashboard</title>
+    <style>
+      :root {
+        --ink: #152033;
+        --muted: #657287;
+        --paper: #fbfcff;
+        --panel: #ffffff;
+        --line: #dce4ef;
+        --blue: #2457c5;
+        --teal: #008f86;
+        --gold: #d67a18;
+        --red: #c3423f;
+        --green: #238957;
+        --violet: #6f4bd8;
+        --shadow: 0 16px 40px rgba(29, 46, 73, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        background:
+          linear-gradient(135deg, rgba(36, 87, 197, 0.16), rgba(0, 143, 134, 0.12), rgba(214, 122, 24, 0.1)),
+          #edf2f8;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .shell {
+        width: min(1240px, calc(100% - 32px));
+        margin: 24px auto 48px;
+      }
+
+      .hero,
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 24px;
+        align-items: center;
+        padding: 34px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, rgba(36, 87, 197, 0.08), rgba(0, 143, 134, 0.06), rgba(214, 122, 24, 0.08));
+        pointer-events: none;
+      }
+
+      .hero > * {
+        position: relative;
+      }
+
+      .eyebrow {
+        color: var(--teal);
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+      }
+
+      h1,
+      h2,
+      h3 {
+        margin: 0;
+        letter-spacing: 0;
+      }
+
+      h1 {
+        max-width: 760px;
+        font-size: 46px;
+        line-height: 1.05;
+      }
+
+      h2 {
+        font-size: 28px;
+        margin-bottom: 16px;
+      }
+
+      h3 {
+        font-size: 18px;
+        margin-bottom: 8px;
+      }
+
+      p,
+      li,
+      td,
+      span {
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.45;
+      }
+
+      .subtitle {
+        max-width: 760px;
+        margin: 14px 0 0;
+        font-size: 18px;
+      }
+
+      .controls {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .month-controls {
+        justify-content: flex-start;
+        margin-bottom: 16px;
+      }
+
+      button {
+        border: 1px solid #c1cad8;
+        background: #ffffff;
+        color: #1d2a39;
+        border-radius: 6px;
+        padding: 9px 12px;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+      }
+
+      button:hover,
+      button.active {
+        border-color: var(--blue);
+        background: #f4f8ff;
+        box-shadow: 0 8px 18px rgba(36, 87, 197, 0.16);
+        transform: translateY(-1px);
+      }
+
+      .grid {
+        display: grid;
+        gap: 16px;
+        margin-top: 18px;
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .two-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .three-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .panel {
+        padding: 24px;
+        margin-top: 18px;
+      }
+
+      .card,
+      .car-card {
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 20px;
+        transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+      }
+
+      .card:hover,
+      .car-card:hover,
+      tr:hover {
+        transform: translateY(-4px);
+        border-color: rgba(36, 87, 197, 0.42);
+        box-shadow: 0 18px 34px rgba(35, 50, 72, 0.13);
+      }
+
+      .metric-label {
+        display: block;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 800;
+        text-transform: uppercase;
+      }
+
+      .metric-value {
+        display: block;
+        color: var(--blue);
+        font-size: 34px;
+        font-weight: 800;
+        line-height: 1;
+        margin-top: 10px;
+      }
+
+      .metric-note {
+        display: block;
+        margin-top: 8px;
+      }
+
+      .good {
+        color: var(--green);
+      }
+
+      .warn {
+        color: var(--gold);
+      }
+
+      .bad {
+        color: var(--red);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      th,
+      td {
+        padding: 13px 14px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+      }
+
+      th {
+        background: linear-gradient(90deg, #eef4ff, #edf9f7);
+        color: #304259;
+        font-size: 12px;
+        text-transform: uppercase;
+      }
+
+      tr {
+        transition: background 160ms ease, box-shadow 160ms ease;
+      }
+
+      tr:hover {
+        background: #fff8ef;
+        box-shadow: inset 5px 0 0 var(--gold);
+      }
+
+      .bar-chart {
+        display: grid;
+        gap: 16px;
+      }
+
+      .bar-row {
+        display: grid;
+        grid-template-columns: 90px 1fr 84px;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .bar-track {
+        height: 20px;
+        background: #edf2f8;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+
+      .bar {
+        height: 100%;
+        min-width: 2px;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--blue), var(--teal));
+      }
+
+      .bar.expense {
+        background: linear-gradient(90deg, var(--gold), var(--red));
+      }
+
+      .split-bars {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .status-good {
+        color: #175c3c;
+        background: #e8f7ef;
+      }
+
+      .status-bad {
+        color: #7c2622;
+        background: #fff0ed;
+      }
+
+      .callout {
+        margin-top: 18px;
+        padding: 16px 18px;
+        border-left: 6px solid var(--teal);
+        border-radius: 8px;
+        background: #eefbf8;
+        color: #19534e;
+        font-size: 17px;
+        font-weight: 800;
+      }
+
+      .source {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .dashboard-switcher {
+        width: min(1240px, calc(100% - 32px));
+        margin: 18px auto 0;
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        box-shadow: 0 12px 30px rgba(29, 46, 73, 0.12);
+      }
+
+      .dashboard-switcher strong {
+        display: block;
+        margin-bottom: 10px;
+        color: var(--ink);
+        font-size: 14px;
+      }
+
+      .dashboard-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .dashboard-links a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 38px;
+        padding: 8px 11px;
+        border: 1px solid #c1cad8;
+        border-radius: 6px;
+        color: #1d2a39;
+        background: #ffffff;
+        font-size: 14px;
+        font-weight: 800;
+        text-decoration: none;
+      }
+
+      .dashboard-links a:hover,
+      .dashboard-links a.active {
+        border-color: var(--blue);
+        background: #f4f8ff;
+        box-shadow: 0 8px 18px rgba(36, 87, 197, 0.16);
+      }
+
+      @media (max-width: 900px) {
+        .shell {
+          width: calc(100% - 20px);
+          margin-top: 10px;
+        }
+
+        .dashboard-switcher {
+          width: calc(100% - 20px);
+          margin-top: 10px;
+        }
+
+        .hero,
+        .summary-grid,
+        .two-grid,
+        .three-grid,
+        .split-bars {
+          grid-template-columns: 1fr;
+        }
+
+        .hero,
+        .panel {
+          padding: 20px;
+        }
+
+        h1 {
+          font-size: 34px;
+        }
+      }
+
+      @media print {
+        body {
+          background: #ffffff;
+        }
+
+        .shell {
+          width: 100%;
+          margin: 0;
+        }
+
+        .controls,
+        .dashboard-switcher {
+          display: none;
+        }
+
+        .hero,
+        .panel {
+          box-shadow: none;
+          border-radius: 0;
+          page-break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="dashboard-switcher" aria-label="Dashboard navigation">
+      <strong>Dashboard Navigation</strong>
+      <div class="dashboard-links">
+        <a href="index.html">Home</a>
+        <a href="car-cost-profitability-dashboard.html">Cost & Profitability</a>
+        <a class="active" href="car-rental-monthly-dashboard.html">Monthly Dashboard</a>
+        <a href="car-rental-booking-utilization-dashboard.html">Booking Utilization</a>
+        <a href="car-rental-similar-business-research-report.html">Research Report</a>
+      </div>
+    </nav>
+    <main class="shell">
+      <section class="hero">
+        <div>
+          <div class="eyebrow">Monthly business dashboard</div>
+          <h1>Car rental income, expenses, and break-even tracker</h1>
+          <p class="subtitle">
+            Built from the data currently available: income through May, insurance spread monthly, Chevy parking, and Chevy March expense.
+          </p>
+        </div>
+        <div class="controls" id="printControls"></div>
+      </section>
+
+      <section class="grid summary-grid" id="summaryCards"></section>
+
+      <section class="panel">
+        <h2 id="selectedMonthTitle">Month Overview</h2>
+        <div class="controls month-controls" id="monthControls"></div>
+        <div class="grid three-grid" id="monthCards"></div>
+        <div class="callout" id="monthTakeaway"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Monthly Income vs Expenses</h2>
+        <div class="split-bars">
+          <div>
+            <h3>Income</h3>
+            <div class="bar-chart" id="incomeChart"></div>
+          </div>
+          <div>
+            <h3>Expenses</h3>
+            <div class="bar-chart" id="expenseChart"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Car-Level Performance</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Car</th>
+              <th>Total Income</th>
+              <th>Expenses</th>
+              <th>Cash Result</th>
+            </tr>
+          </thead>
+          <tbody id="carTable"></tbody>
+        </table>
+        <p class="source">
+          Cash result uses the expenses entered so far.
+        </p>
+      </section>
+
+      <section class="panel">
+        <h2>Detailed Monthly Data</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Chevy Income</th>
+              <th>Chevy Expense</th>
+              <th>Mustang Income</th>
+              <th>Mustang Expense</th>
+              <th>Total Income</th>
+              <th>Total Expense</th>
+              <th>Cash Result</th>
+            </tr>
+          </thead>
+          <tbody id="monthlyTable"></tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>Trip Detail</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Customer Name</th>
+              <th>Number of Days</th>
+              <th>Trip Total</th>
+              <th>Rent Per Day</th>
+            </tr>
+          </thead>
+          <tbody id="tripTable"></tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>Current Data Assumptions</h2>
+        <div class="grid two-grid">
+          <div class="card">
+            <h3>Income entered</h3>
+            <ul>
+              <li>Chevy Cruze: Feb $76, Mar $360, Apr $324, May $0.</li>
+              <li>Ford Mustang: Mar $260. Other months currently $0.</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Expenses entered</h3>
+            <ul>
+              <li>Chevy insurance: $700 over 6 months = $116.67/month.</li>
+              <li>Mustang insurance: $900 over 6 months = $150/month.</li>
+              <li>Chevy parking: $35/month from February.</li>
+              <li>Chevy other expense: March $108.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout">
+          Next data to add: cleaning, maintenance, repairs, tolls, platform fees, miles driven, booked days, and any Mustang parking or repair expenses.
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const months = ["Feb", "Mar", "Apr", "May"];
+
+      const cars = [
+        {
+          name: "Chevy Cruze",
+          income: { Feb: 76, Mar: 360, Apr: 324, May: 0 },
+          expenses: {
+            Feb: { insurance: 700 / 6, parking: 35, other: 0 },
+            Mar: { insurance: 700 / 6, parking: 35, other: 108 },
+            Apr: { insurance: 700 / 6, parking: 35, other: 0 },
+            May: { insurance: 700 / 6, parking: 35, other: 0 }
+          }
+        },
+        {
+          name: "Ford Mustang",
+          income: { Feb: 0, Mar: 260, Apr: 0, May: 0 },
+          expenses: {
+            Feb: { insurance: 900 / 6, parking: 0, other: 0 },
+            Mar: { insurance: 900 / 6, parking: 0, other: 0 },
+            Apr: { insurance: 900 / 6, parking: 0, other: 0 },
+            May: { insurance: 900 / 6, parking: 0, other: 0 }
+          }
+        }
+      ];
+
+      const trips = [
+        { date: "Feb 28 - Mar 1", customer: "Terrance Clark Jr", tripTotal: 76.3 },
+        { date: "Mar 2 - Mar 7", customer: "Katrina Allen", tripTotal: 183.04 },
+        { date: "Mar 11 - Mar 16", customer: "Kathleen Soime", tripTotal: 177.12 },
+        { date: "Apr 5 - Apr 8", customer: "Dawn", tripTotal: 86.4 },
+        { date: "Apr 11 - Apr 23", customer: "Autumn", tripTotal: 121.87 },
+        { date: "Apr 25 - Apr 28", customer: "Kimberly", tripTotal: 115.92 },
+        { date: "Apr 30 - May 4", customer: "Jayhon", tripTotal: null }
+      ];
+
+      const money = (value) =>
+        value.toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
+
+      const sum = (values) => values.reduce((total, value) => total + value, 0);
+      const carExpense = (car, month) => sum(Object.values(car.expenses[month] || {}));
+      const carIncome = (car, month) => car.income[month] || 0;
+      const monthIncome = (month) => sum(cars.map((car) => carIncome(car, month)));
+      const monthExpense = (month) => sum(cars.map((car) => carExpense(car, month)));
+      const totalIncome = () => sum(months.map(monthIncome));
+      const totalExpense = () => sum(months.map(monthExpense));
+      const monthNumbers = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+
+      function parseTripDatePart(value, fallbackMonth) {
+        const match = value.trim().match(/^([A-Za-z]+)?\s*(\d+)$/);
+        if (!match) {
+          return null;
+        }
+        const month = match[1] || fallbackMonth;
+        return { month, day: Number(match[2]) };
+      }
+
+      function tripDayCount(dateRange) {
+        const parts = dateRange.split(" - ");
+        if (parts.length !== 2) {
+          return null;
+        }
+        const start = parseTripDatePart(parts[0]);
+        const end = parseTripDatePart(parts[1], start && start.month);
+        if (!start || !end || monthNumbers[start.month] === undefined || monthNumbers[end.month] === undefined) {
+          return null;
+        }
+        const startDate = new Date(Date.UTC(2026, monthNumbers[start.month], start.day));
+        const endDate = new Date(Date.UTC(2026, monthNumbers[end.month], end.day));
+        return Math.round((endDate - startDate) / 86400000) + 1;
+      }
+
+      let selectedMonth = "May";
+
+      function renderMonthControls() {
+        const controls = document.getElementById("monthControls");
+        controls.innerHTML = "";
+        months.forEach((month) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.textContent = month;
+          button.className = month === selectedMonth ? "active" : "";
+          button.addEventListener("click", () => {
+            selectedMonth = month;
+            render();
+          });
+          controls.appendChild(button);
+        });
+      }
+
+      function renderPrintControls() {
+        const controls = document.getElementById("printControls");
+        controls.innerHTML = "";
+        const printButton = document.createElement("button");
+        printButton.type = "button";
+        printButton.textContent = "Print / Save PDF";
+        printButton.addEventListener("click", () => window.print());
+        controls.appendChild(printButton);
+      }
+
+      function renderSummaryCards() {
+        const income = totalIncome();
+        const expense = totalExpense();
+        const cashResult = income - expense;
+        const cards = [
+          ["Total income", money(income), "Feb-May income entered so far", "good"],
+          ["Expenses", money(expense), "Insurance, parking, and March Chevy expense", "warn"],
+          ["Cash result", money(cashResult), "Income minus expenses", cashResult >= 0 ? "good" : "bad"]
+        ];
+
+        document.getElementById("summaryCards").innerHTML = cards
+          .map(
+            ([label, value, note, tone]) => `
+              <div class="card">
+                <span class="metric-label">${label}</span>
+                <strong class="metric-value ${tone}">${value}</strong>
+                <span class="metric-note">${note}</span>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function renderSelectedMonth() {
+        const income = monthIncome(selectedMonth);
+        const expense = monthExpense(selectedMonth);
+        const cash = income - expense;
+
+        document.getElementById("selectedMonthTitle").textContent = `${selectedMonth} Overview`;
+        document.getElementById("monthCards").innerHTML = [
+          ["Income", money(income), "Total income entered for this month", income > 0 ? "good" : "bad"],
+          ["Expenses", money(expense), "Insurance, parking, and other costs entered", "warn"],
+          ["Cash result", money(cash), "Income minus expenses", cash >= 0 ? "good" : "bad"]
+        ]
+          .map(
+            ([label, value, note, tone]) => `
+              <div class="card">
+                <span class="metric-label">${label}</span>
+                <strong class="metric-value ${tone}">${value}</strong>
+                <span class="metric-note">${note}</span>
+              </div>
+            `
+          )
+          .join("");
+
+        const direction =
+          cash >= 0
+            ? `${selectedMonth} is positive by ${money(cash)} after expenses.`
+            : `${selectedMonth} is negative by ${money(Math.abs(cash))} after expenses.`;
+        document.getElementById("monthTakeaway").textContent = direction;
+      }
+
+      function renderBarChart(id, values, type) {
+        const max = Math.max(...values.map((item) => item.value), 1);
+        document.getElementById(id).innerHTML = values
+          .map(
+            (item) => `
+              <div class="bar-row">
+                <strong>${item.label}</strong>
+                <div class="bar-track"><div class="bar ${type}" style="width: ${(item.value / max) * 100}%"></div></div>
+                <span>${money(item.value)}</span>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function renderCarTable() {
+        document.getElementById("carTable").innerHTML = cars
+          .map((car) => {
+            const income = sum(months.map((month) => carIncome(car, month)));
+            const expense = sum(months.map((month) => carExpense(car, month)));
+            const cash = income - expense;
+            return `
+              <tr>
+                <td><strong>${car.name}</strong></td>
+                <td>${money(income)}</td>
+                <td>${money(expense)}</td>
+                <td class="${cash >= 0 ? "good" : "bad"}">${money(cash)}</td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function renderMonthlyTable() {
+        document.getElementById("monthlyTable").innerHTML = months
+          .map((month) => {
+            const chevy = cars[0];
+            const mustang = cars[1];
+            const totalMonthIncome = monthIncome(month);
+            const totalMonthExpense = monthExpense(month);
+            const cash = totalMonthIncome - totalMonthExpense;
+            return `
+              <tr>
+                <td><strong>${month}</strong></td>
+                <td>${money(carIncome(chevy, month))}</td>
+                <td>${money(carExpense(chevy, month))}</td>
+                <td>${money(carIncome(mustang, month))}</td>
+                <td>${money(carExpense(mustang, month))}</td>
+                <td>${money(totalMonthIncome)}</td>
+                <td>${money(totalMonthExpense)}</td>
+                <td class="${cash >= 0 ? "good" : "bad"}">${money(cash)}</td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function renderTripTable() {
+        document.getElementById("tripTable").innerHTML = trips
+          .map((trip) => {
+            const days = tripDayCount(trip.date);
+            const rentPerDay = trip.tripTotal && days ? trip.tripTotal / days : null;
+            return `
+              <tr>
+                <td><strong>${trip.date}</strong></td>
+                <td>${trip.customer}</td>
+                <td>${days === null ? "n/a" : days}</td>
+                <td>${trip.tripTotal === null ? "n/a" : money(trip.tripTotal)}</td>
+                <td>${rentPerDay === null ? "n/a" : money(rentPerDay)}</td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function render() {
+        renderMonthControls();
+        renderPrintControls();
+        renderSummaryCards();
+        renderSelectedMonth();
+        renderBarChart(
+          "incomeChart",
+          months.map((month) => ({ label: month, value: monthIncome(month) })),
+          "income"
+        );
+        renderBarChart(
+          "expenseChart",
+          months.map((month) => ({ label: month, value: monthExpense(month) })),
+          "expense"
+        );
+        renderCarTable();
+        renderMonthlyTable();
+        renderTripTable();
+      }
+
+      render();
+    </script>
+  </body>
+</html>
