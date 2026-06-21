@@ -395,6 +395,7 @@
   <div class="panel">
     <h2>Monthly Financial Performance</h2>
     <p class="panel-sub">Select a month &mdash; hover the chart segments for details</p>
+    <div class="cal-month-filter" id="donutCarBtns"></div>
     <div class="donut-3-grid" id="donut3Grid"></div>
   </div>
 
@@ -578,6 +579,7 @@ let fMonth   = MONTHS.find(m => m.key === _curKey) ? _curKey : "All";
 let fCar     = "All";
 let calMonth  = "All"; // local filter for Booking Calendar tab only
 let custMonth = MONTHS.find(m => m.key === _curKey) ? _curKey : "All"; // local filter for Customer & Booking Details
+let donutCar  = "All"; // local car filter for Monthly Financial Performance
 
 function visMonths() {
   return fMonth === "All" ? MONTHS : MONTHS.filter(m => m.key === fMonth);
@@ -840,7 +842,16 @@ function sectorPath(cx, cy, R, r, startDeg, endDeg) {
 }
 
 function renderDonutChart() {
-  const cars  = fCar === "All" ? ["Chevy","Mustang"] : [fCar];
+  // Local car filter buttons
+  $("donutCarBtns").innerHTML = [
+    { key:"All",     lbl:"All Cars" },
+    { key:"Chevy",   lbl:"Chevy Cruze" },
+    { key:"Mustang", lbl:"Mustang GT" },
+  ].map(({ key, lbl }) =>
+    `<button class="fbtn${donutCar===key?" active":""}" onclick="donutCar='${key}';renderDonutChart()">${lbl}</button>`
+  ).join("");
+
+  const cars  = donutCar === "All" ? ["Chevy","Mustang"] : [donutCar];
   const last3 = MONTHS.slice(-3);
   const fmtSgn = v => (v < 0 ? "−" : "") + fmt$(v);
   const cx=90, cy=90, Ro=72, Ri=44;
