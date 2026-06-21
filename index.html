@@ -336,7 +336,7 @@
   <!-- ── Hero ── -->
   <header class="hero">
     <div>
-      <div class="eyebrow">Rental Car Business &bull; Wave Export &bull; Feb&ndash;May 2026</div>
+      <div class="eyebrow">Rental Car Business &bull; Wave Export &bull; Feb&ndash;Jun 2026</div>
       <h1>HunKaar Dashboard</h1>
       <p>2014 Chevy Cruze &nbsp;&bull;&nbsp; 2019 Ford Mustang GT &nbsp;&bull;&nbsp; 11 bookings &nbsp;&bull;&nbsp; 4 months of data</p>
     </div>
@@ -442,6 +442,7 @@ const MONTHS = [
   { key:"Mar", label:"Mar 2026", index:2, year:2026, days:31 },
   { key:"Apr", label:"Apr 2026", index:3, year:2026, days:30 },
   { key:"May", label:"May 2026", index:4, year:2026, days:31 },
+  { key:"Jun", label:"Jun 2026", index:5, year:2026, days:30 },
 ];
 
 // start/end arrays: [year, jsMonth(0-based), day]
@@ -449,22 +450,38 @@ const BOOKINGS = [
   { id:1,  customer:"Terrance Clark Jr", car:"Chevy",   start:[2026,1,28], end:[2026,2,1],  income:76.30,  payMonth:"Feb" },
   { id:2,  customer:"Katrina Allen",     car:"Chevy",   start:[2026,2,3],  end:[2026,2,7],  income:183.04, payMonth:"Mar" },
   { id:3,  customer:"Kathleen Soime",    car:"Chevy",   start:[2026,2,11], end:[2026,2,16], income:177.12, payMonth:"Mar" },
-  { id:4,  customer:"Tina",              car:"Mustang", start:[2026,2,25], end:[2026,2,29], income:260.82, payMonth:"Mar" },
-  { id:5,  customer:"Dawn",              car:"Chevy",   start:[2026,3,5],  end:[2026,3,8],  income:86.40,  payMonth:"Apr" },
-  { id:6,  customer:"Autumn",            car:"Chevy",   start:[2026,3,11], end:[2026,3,23], income:378.14, payMonth:"Apr" },
-  { id:7,  customer:"Kimberly",          car:"Chevy",   start:[2026,3,25], end:[2026,3,28], income:115.92, payMonth:"Apr" },
-  { id:8,  customer:"Jahyon",            car:"Chevy",   start:[2026,3,30], end:[2026,4,4],  income:154.87, payMonth:"Apr" },
-  { id:9,  customer:"Hope Esther",       car:"Chevy",   start:[2026,4,17], end:[2026,4,21], income:176.64, payMonth:"May" },
-  { id:10, customer:"Kristyana",         car:"Chevy",   start:[2026,4,22], end:[2026,4,25], income:165.28, payMonth:"May" },
-  { id:11, customer:"Karlene",           car:"Chevy",   start:[2026,4,26], end:[2026,5,1],  income:216.00, payMonth:"May" },
+  { id:4,  customer:"Tina",             car:"Mustang", start:[2026,2,25], end:[2026,2,29], income:260.82, payMonth:"Mar" },
+  { id:5,  customer:"Dawn",             car:"Chevy",   start:[2026,3,5],  end:[2026,3,8],  income:86.40,  payMonth:"Apr" },
+  { id:6,  customer:"Autumn",           car:"Chevy",   start:[2026,3,11], end:[2026,3,23], income:378.14, payMonth:"Apr" },
+  { id:7,  customer:"Kimberly",         car:"Chevy",   start:[2026,3,25], end:[2026,3,28], income:115.92, payMonth:"Apr" },
+  { id:8,  customer:"Jahyon",           car:"Chevy",   start:[2026,3,30], end:[2026,4,4],  income:154.87, payMonth:"Apr" },
+  { id:9,  customer:"Hope Esther",      car:"Chevy",   start:[2026,4,17], end:[2026,4,21], income:176.64, payMonth:"May" },
+  { id:10, customer:"Kristyana",        car:"Chevy",   start:[2026,4,22], end:[2026,4,25], income:165.28, payMonth:"May" },
+  { id:11, customer:"Karlene",          car:"Chevy",   start:[2026,4,26], end:[2026,5,1],  income:216.00, payMonth:"May" },
+  { id:12, customer:"Rachel",           car:"Chevy",   start:[2026,5,2],  end:[2026,5,3],  income:31.68,  payMonth:"Jun" },
+  { id:13, customer:"Steven",           car:"Chevy",   start:[2026,5,4],  end:[2026,5,7],  income:102.38, payMonth:"Jun" },
+  { id:14, customer:"Deshawn",          car:"Chevy",   start:[2026,5,8],  end:[2026,5,11], income:185.28, payMonth:"Jun" },
+  { id:15, customer:"Candace",          car:"Chevy",   start:[2026,5,14], end:[2026,5,16], income:113.76, payMonth:"Jun" },
+  { id:16, customer:"Damon Fathima",    car:"Chevy",   start:[2026,5,17], end:[2026,5,18], income:242.46, payMonth:"Jun" },
 ];
 
 const EXPENSES = [
-  { month:"Mar", car:"Chevy", desc:"Gas",           category:"Fuel",        amount:6.14  },
-  { month:"Mar", car:"Chevy", desc:"Prime Car Wash", category:"Cleaning",    amount:44.00 },
-  { month:"Mar", car:"Chevy", desc:"Air Freshener",  category:"Cleaning",    amount:2.00  },
-  { month:"Mar", car:"Chevy", desc:"Headlight",      category:"Maintenance", amount:25.00 },
-  { month:"Mar", car:"Chevy", desc:"Fuel",           category:"Fuel",        amount:31.00 },
+  // Monthly parking — Chevy ($45) and Mustang ($250) each month
+  { month:"Feb", car:"Chevy",   desc:"Chevy Parking",   category:"Parking", amount:45.00  },
+  { month:"Feb", car:"Mustang", desc:"Mustang Parking",  category:"Parking", amount:250.00 },
+  { month:"Mar", car:"Chevy",   desc:"Chevy Parking",   category:"Parking", amount:45.00  },
+  { month:"Mar", car:"Mustang", desc:"Mustang Parking",  category:"Parking", amount:250.00 },
+  { month:"Mar", car:"Chevy",   desc:"Gas",              category:"Fuel",    amount:6.14   },
+  { month:"Mar", car:"Chevy",   desc:"Prime Car Wash",   category:"Cleaning", amount:44.00 },
+  { month:"Mar", car:"Chevy",   desc:"Air Freshener",    category:"Cleaning", amount:2.00  },
+  { month:"Mar", car:"Chevy",   desc:"Headlight",        category:"Maintenance", amount:25.00 },
+  { month:"Mar", car:"Chevy",   desc:"Fuel",             category:"Fuel",    amount:31.00  },
+  { month:"Apr", car:"Chevy",   desc:"Chevy Parking",   category:"Parking", amount:45.00  },
+  { month:"Apr", car:"Mustang", desc:"Mustang Parking",  category:"Parking", amount:250.00 },
+  { month:"May", car:"Chevy",   desc:"Chevy Parking",   category:"Parking", amount:45.00  },
+  { month:"May", car:"Mustang", desc:"Mustang Parking",  category:"Parking", amount:250.00 },
+  { month:"Jun", car:"Chevy",   desc:"Chevy Parking",   category:"Parking", amount:45.00  },
+  { month:"Jun", car:"Mustang", desc:"Mustang Parking",  category:"Parking", amount:250.00 },
 ];
 
 // Purchase price per car — capital cost to recover before the vehicle is "in profit"
@@ -926,7 +943,7 @@ function renderExpenses() {
   const ex = visExpenses();
   if (!ex.length) {
     $("expenseBreakdown").innerHTML = `<p class="no-data">No operating expenses recorded for this selection.</p>
-      <p style="font-size:12px;color:var(--muted);margin-top:4px">Mustang expenses (insurance, maintenance, fuel) have not been entered in Wave yet.</p>`;
+      <p style="font-size:12px;color:var(--muted);margin-top:4px">No expenses recorded for this filter selection.</p>`;
     return;
   }
 
