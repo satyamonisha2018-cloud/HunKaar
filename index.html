@@ -577,7 +577,7 @@ const _curKey = MNAMES[new Date().getMonth()].slice(0,3);
 let fMonth   = MONTHS.find(m => m.key === _curKey) ? _curKey : "All";
 let fCar     = "All";
 let calMonth  = "All"; // local filter for Booking Calendar tab only
-let custMonth = "All"; // local filter for Customer & Booking Details
+let custMonth = MONTHS.find(m => m.key === _curKey) ? _curKey : "All"; // local filter for Customer & Booking Details
 
 function visMonths() {
   return fMonth === "All" ? MONTHS : MONTHS.filter(m => m.key === fMonth);
