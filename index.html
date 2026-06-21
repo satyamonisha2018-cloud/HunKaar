@@ -170,24 +170,36 @@
     .panel h2 { font-size: 16px; margin-bottom: 3px; }
     .panel-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
 
-    /* ── Bar charts ── */
-    .month-block { margin-bottom: 16px; }
-    .month-block:last-child { margin-bottom: 0; }
-    .month-name { font-size: 12.5px; font-weight: 700; margin-bottom: 6px; }
-    .bar-rows { display: grid; gap: 4px; }
-    .bar-row { display: grid; grid-template-columns: 64px 1fr 76px; gap: 8px; align-items: center; }
-    .bar-row-lbl { font-size: 11px; color: var(--muted); }
+    /* ── Expense bar charts (used by Expense Breakdown) ── */
     .bar-track { background: #edf2f8; border-radius: 3px; height: 16px; overflow: hidden; }
     .bar-fill { height: 100%; border-radius: 3px; transition: width .35s ease; }
-    .bf-income  { background: var(--green); }
     .bf-expense { background: var(--red); }
-    .bf-profit  { background: var(--blue); }
-    .bf-loss    { background: var(--red); }
-
-    /* ── Legend (Monthly Financial Performance horizontal bars) ── */
-    .vbar-legend { display: flex; gap: 16px; margin-top: 14px; }
-    .vbar-legend span { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
     .bar-val { font-size: 11.5px; font-weight: 700; text-align: right; }
+
+    /* ── Donut Chart ── */
+    .donut-wrap { display: flex; gap: 32px; align-items: center; flex-wrap: wrap; }
+    .donut-month-btns { display: flex; flex-direction: column; gap: 6px; }
+    .donut-legend { display: flex; flex-direction: column; gap: 18px; }
+    .dl-item { display: flex; align-items: center; gap: 10px; }
+    .dl-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .dl-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
+    .dl-val { font-size: 18px; font-weight: 800; }
+    .donut-sector { cursor: pointer; transition: opacity .12s; }
+    .donut-sector:hover { opacity: .78; }
+    .donut-tip {
+      position: fixed;
+      background: var(--ink);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 12.5px;
+      line-height: 1.75;
+      pointer-events: none;
+      z-index: 300;
+      max-width: 240px;
+      display: none;
+      box-shadow: 0 6px 20px rgba(0,0,0,.30);
+    }
 
     /* ── Utilization legend (used by the booking calendar) ── */
     .util-legend { display: flex; gap: 14px; margin-top: 12px; }
@@ -380,11 +392,15 @@
   <!-- ── Per-Car KPIs ── -->
   <div class="car-grid" id="carKpis"></div>
 
-  <!-- ── Monthly Trend ── -->
+  <!-- ── Monthly Financial Performance (Donut) ── -->
   <div class="panel">
     <h2>Monthly Financial Performance</h2>
-    <p class="panel-sub">Income, expenses and net profit by month</p>
-    <div id="monthlyTrend"></div>
+    <p class="panel-sub">Select a month &mdash; hover the chart segments for details</p>
+    <div class="donut-wrap">
+      <div class="donut-month-btns" id="donutMonthBtns"></div>
+      <svg id="donutSvg" viewBox="0 0 220 220" width="220" height="220" style="flex-shrink:0;overflow:visible"></svg>
+      <div class="donut-legend" id="donutLegend"></div>
+    </div>
   </div>
 
   <!-- ── Expense Breakdown ── -->
@@ -808,48 +824,108 @@ function renderCostRecovery() {
 //  RENDER: MONTHLY TREND
 // ═══════════════════════════════════════════════════════
 
-function renderMonthlyTrend() {
-  const mos  = visMonths();
+// ── Donut chart local state ──
+let dMonth = "All";
+const _DTIPS = {};
+
+function sectorPath(cx, cy, R, r, startDeg, endDeg) {
+  const rad = a => (a - 90) * Math.PI / 180;
+  const pt  = (a, radius) => [cx + radius * Math.cos(rad(a)), cy + radius * Math.sin(rad(a))];
+  const [x1,y1] = pt(startDeg, R), [x2,y2] = pt(endDeg, R);
+  const [x3,y3] = pt(endDeg,   r), [x4,y4] = pt(startDeg, r);
+  const lg = (endDeg - startDeg) > 180 ? 1 : 0;
+  return `M${x1} ${y1} A${R} ${R} 0 ${lg} 1 ${x2} ${y2} L${x3} ${y3} A${r} ${r} 0 ${lg} 0 ${x4} ${y4}Z`;
+}
+
+function renderDonutChart() {
   const cars = fCar === "All" ? ["Chevy","Mustang"] : [fCar];
 
-  const data = mos.map(mo => {
-    const inc  = sum(BOOKINGS.filter(b => b.payMonth===mo.key && cars.includes(b.car)).map(b=>b.income));
-    const exp  = sum(EXPENSES.filter(e => e.month===mo.key   && cars.includes(e.car)).map(e=>e.amount));
-    return { label:mo.key, inc, exp, net:inc-exp };
+  // Build local month filter buttons
+  const keys = ["All", ...MONTHS.map(m => m.key)];
+  $("donutMonthBtns").innerHTML = keys.map(k => {
+    const lbl = k === "All" ? "All" : k;
+    return `<button class="fbtn${dMonth===k?" active":""}" onclick="dMonth='${k}';renderDonutChart()">${lbl}</button>`;
+  }).join("");
+
+  const bkF = b => cars.includes(b.car) && (dMonth==="All" || b.payMonth===dMonth);
+  const exF = e => cars.includes(e.car) && (dMonth==="All" || e.month===dMonth);
+
+  const bks = BOOKINGS.filter(bkF);
+  const exs = EXPENSES.filter(exF);
+  const inc = sum(bks.map(b => b.income));
+  const exp = sum(exs.map(e => e.amount));
+  const net = inc - exp;
+
+  // Build tooltip content
+  const cats = {};
+  exs.forEach(e => { cats[e.category] = (cats[e.category] || 0) + e.amount; });
+  const catLines = Object.entries(cats).sort((a,b) => b[1]-a[1])
+    .map(([c,v]) => `<span style="opacity:.7">${c}</span>&nbsp;&nbsp;${fmt$(v)}`).join("<br>");
+
+  _DTIPS.inc = `<strong>Income&nbsp;&nbsp;${fmt$(inc)}</strong><br><span style="opacity:.7">${bks.length} booking${bks.length!==1?"s":""}</span>`;
+  _DTIPS.exp = exp > 0
+    ? `<strong>Expenses&nbsp;&nbsp;${fmt$(exp)}</strong><br>${catLines}`
+    : `<strong>Expenses</strong><br><span style="opacity:.7">None for this selection</span>`;
+
+  const svg   = $("donutSvg");
+  const cx=110, cy=110, Ro=88, Ri=54;
+  const total = inc + exp;
+
+  if (total < 0.01) {
+    svg.innerHTML = `<text x="110" y="116" text-anchor="middle" font-size="13" fill="var(--muted)" font-family="Arial">No data</text>`;
+    $("donutLegend").innerHTML = "";
+    return;
+  }
+
+  const incFrac = inc / total;
+  const incDeg  = incFrac * 360;
+
+  let paths = "";
+  if (incFrac > 0.999) {
+    paths = `<circle class="donut-sector" cx="${cx}" cy="${cy}" r="${(Ro+Ri)/2}" stroke="var(--green)" stroke-width="${Ro-Ri}" fill="none" data-tip="inc"/>`;
+  } else if (incFrac < 0.001) {
+    paths = `<circle class="donut-sector" cx="${cx}" cy="${cy}" r="${(Ro+Ri)/2}" stroke="var(--red)" stroke-width="${Ro-Ri}" fill="none" data-tip="exp"/>`;
+  } else {
+    paths = `
+      <path class="donut-sector" d="${sectorPath(cx,cy,Ro,Ri,0,incDeg)}"       fill="var(--green)" data-tip="inc"/>
+      <path class="donut-sector" d="${sectorPath(cx,cy,Ro,Ri,incDeg,359.99)}"  fill="var(--red)"   data-tip="exp"/>`;
+  }
+
+  const netColor = net >= 0 ? "var(--green)" : "var(--red)";
+  const netSign  = net < 0 ? "−" : "+";
+
+  svg.innerHTML = `
+    ${paths}
+    <circle cx="${cx}" cy="${cy}" r="${Ri-1}" fill="var(--panel)"/>
+    <text x="${cx}" y="${cy-9}"  text-anchor="middle" font-size="10" fill="var(--muted)"   font-family="Arial,sans-serif">Net P/L</text>
+    <text x="${cx}" y="${cy+12}" text-anchor="middle" font-size="14" font-weight="800" fill="${netColor}" font-family="Arial,sans-serif">${netSign}${fmt$(net)}</text>
+  `;
+
+  svg.querySelectorAll(".donut-sector").forEach(el => {
+    el.addEventListener("mouseenter", e => { const t=$("donutTip"); t.innerHTML=_DTIPS[el.dataset.tip]; t.style.display="block"; moveDonutTip(e); });
+    el.addEventListener("mousemove",  moveDonutTip);
+    el.addEventListener("mouseleave", () => { $("donutTip").style.display="none"; });
   });
 
-  const maxV = Math.max(...data.flatMap(d=>[d.inc,d.exp,Math.abs(d.net)]),1);
-  const rows = [
-    { key:"inc", label:"Income",   cls:"bf-income"  },
-    { key:"exp", label:"Expenses", cls:"bf-expense" },
-    { key:"net", label:"Net P/L",  cls:""           },
-  ];
-
-  $("monthlyTrend").innerHTML = data.map(row => `
-    <div class="month-block">
-      <div class="month-name">${row.label}</div>
-      <div class="bar-rows">
-        ${rows.map(r => {
-          const v       = row[r.key];
-          const fillCls = r.key === "net" ? (v >= 0 ? "bf-profit" : "bf-loss") : r.cls;
-          const valCls  = r.key === "exp" ? "bad" : (r.key === "net" ? (v >= 0 ? "good" : "bad") : "good");
-          return `
-            <div class="bar-row">
-              <span class="bar-row-lbl">${r.label}</span>
-              <div class="bar-track"><div class="bar-fill ${fillCls}" style="width:${(Math.abs(v)/maxV)*100}%"></div></div>
-              <span class="bar-val ${valCls}">${fmt$(v)}</span>
-            </div>
-          `;
-        }).join("")}
+  const fmtSgn = v => (v < 0 ? "−" : "") + fmt$(v);
+  $("donutLegend").innerHTML = [
+    { color:"var(--green)",                           lbl:"Income",   val:fmt$(inc),     cls:"good" },
+    { color:"var(--red)",                             lbl:"Expenses", val:fmt$(exp),     cls:"bad"  },
+    { color:net>=0?"var(--blue)":"var(--red)",        lbl:"Net P/L",  val:(net>=0?"+":"")+fmtSgn(net), cls:net>=0?"good":"bad" },
+  ].map(it => `
+    <div class="dl-item">
+      <div class="dl-dot" style="background:${it.color}"></div>
+      <div>
+        <div class="dl-lbl">${it.lbl}</div>
+        <div class="dl-val ${it.cls}">${it.val}</div>
       </div>
-    </div>
-  `).join("") + `
-    <div class="vbar-legend">
-      <span><i class="dot" style="background:var(--green)"></i> Income</span>
-      <span><i class="dot" style="background:var(--red)"></i> Expenses</span>
-      <span><i class="dot" style="background:var(--blue)"></i> Net P/L (profit)</span>
-    </div>
-  `;
+    </div>`).join("");
+}
+
+function moveDonutTip(e) {
+  const t = $("donutTip");
+  t.style.left = (e.clientX + 16) + "px";
+  t.style.top  = (e.clientY - 12) + "px";
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1041,7 +1117,7 @@ function render() {
   renderKPIs();
   renderCarKPIs();
   renderCostRecovery();
-  renderMonthlyTrend();
+  renderDonutChart();
   renderBookingKPIs();
   renderCalendar();
   renderExpenses();
@@ -1069,5 +1145,6 @@ $("tabBar").addEventListener("click", e => {
 renderFilters();
 render();
 </script>
+<div id="donutTip" class="donut-tip"></div>
 </body>
 </html>
