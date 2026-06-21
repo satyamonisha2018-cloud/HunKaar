@@ -171,6 +171,9 @@
     .panel-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
 
 
+    /* ── Calendar local month filter ── */
+    .cal-month-filter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+
     /* ── Donut Chart ── */
     .donut-wrap { display: flex; gap: 32px; align-items: center; flex-wrap: wrap; }
     .donut-month-btns { display: flex; flex-direction: column; gap: 6px; }
@@ -419,6 +422,7 @@
     <div class="panel">
       <h2>Booking Calendar</h2>
       <p class="panel-sub">Day-by-day view of booked vs idle days, per car &mdash; hover a day for details</p>
+      <div class="cal-month-filter" id="calMonthBtns"></div>
       <div id="bookingCalendar"></div>
     </div>
 
@@ -571,8 +575,9 @@ function bestUtilMonth(mos, cars) {
 //  FILTER STATE
 // ═══════════════════════════════════════════════════════
 
-let fMonth = "All";
-let fCar   = "All";
+let fMonth   = "All";
+let fCar     = "All";
+let calMonth = "All"; // local filter for Booking Calendar tab only
 
 function visMonths() {
   return fMonth === "All" ? MONTHS : MONTHS.filter(m => m.key === fMonth);
@@ -650,9 +655,18 @@ function renderKPIs() {
   const tripDays  = sum(bk.map(totalDays));
   const avgRate   = tripDays > 0 ? income / tripDays : 0;
 
-  $("h-income").textContent = fmt$(income);
-  $("h-profit").textContent = fmt$(profit);
-  $("h-util").textContent   = fmtPct(utilRate);
+  // Hero stats always show All-time totals — unaffected by filters
+  const allInc  = sum(BOOKINGS.map(b => b.income));
+  const allExp  = sum(EXPENSES.map(e => e.amount));
+  let allBooked = 0, allAvail = 0;
+  MONTHS.forEach(mo => ["Chevy","Mustang"].forEach(car => {
+    allBooked += carMonthBooked(car, mo);
+    allAvail  += mo.days;
+  }));
+  const allNet = allInc - allExp;
+  $("h-income").textContent = fmt$(allInc);
+  $("h-profit").textContent = (allNet < 0 ? "−" : "") + fmt$(allNet);
+  $("h-util").textContent   = fmtPct(allAvail > 0 ? allBooked / allAvail : 0);
 
   const cards = [
     { lbl:"Total Income",    val:fmt$(income),   cls:"c-blue",  note:"All rental revenue" },
@@ -922,7 +936,7 @@ function moveDonutTip(e) {
 // ═══════════════════════════════════════════════════════
 
 function renderBookingKPIs() {
-  const mos  = visMonths();
+  const mos  = calMonth === "All" ? MONTHS : MONTHS.filter(m => m.key === calMonth);
   const cars = fCar === "All" ? ["Chevy","Mustang"] : [fCar];
 
   let bookedDays = 0, availDays = 0;
@@ -955,8 +969,14 @@ function renderBookingKPIs() {
 // ═══════════════════════════════════════════════════════
 
 function renderCalendar() {
-  const mos  = visMonths();
+  const mos  = calMonth === "All" ? MONTHS : MONTHS.filter(m => m.key === calMonth);
   const cars = fCar === "All" ? ["Chevy","Mustang"] : [fCar];
+
+  // Build local month filter buttons beside the calendar
+  $("calMonthBtns").innerHTML = ["All", ...MONTHS.map(m => m.key)].map(k => {
+    const lbl = k === "All" ? "All" : k;
+    return `<button class="fbtn${calMonth===k?" active":""}" onclick="calMonth='${k}';renderCalendar();renderBookingKPIs()">${lbl}</button>`;
+  }).join("");
   const DOW  = ["Su","Mo","Tu","We","Th","Fr","Sa"];
 
   // One lookup set per visible car — a single calendar overlays both, color-coded
