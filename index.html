@@ -174,14 +174,15 @@
     /* ── Calendar local month filter ── */
     .cal-month-filter { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
 
-    /* ── Donut Chart ── */
-    .donut-wrap { display: flex; gap: 32px; align-items: center; flex-wrap: wrap; }
-    .donut-month-btns { display: flex; flex-direction: column; gap: 6px; }
-    .donut-legend { display: flex; flex-direction: column; gap: 18px; }
-    .dl-item { display: flex; align-items: center; gap: 10px; }
-    .dl-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
-    .dl-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px; }
-    .dl-val { font-size: 18px; font-weight: 800; }
+    /* ── Donut 3-grid ── */
+    .donut-3-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .donut-card { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .donut-card-title { font-size: 13px; font-weight: 800; color: var(--ink); letter-spacing: .01em; }
+    .donut-3-legend { display: flex; flex-direction: column; gap: 7px; width: 100%; padding: 0 4px; }
+    .dl3-item { display: flex; align-items: center; gap: 8px; }
+    .dl3-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .dl3-lbl { font-size: 11px; color: var(--muted); flex: 1; }
+    .dl3-val { font-size: 13px; font-weight: 700; }
     .donut-sector { cursor: pointer; transition: opacity .12s; }
     .donut-sector:hover { opacity: .78; }
     .donut-tip {
@@ -394,11 +395,7 @@
   <div class="panel">
     <h2>Monthly Financial Performance</h2>
     <p class="panel-sub">Select a month &mdash; hover the chart segments for details</p>
-    <div class="donut-wrap">
-      <div class="donut-month-btns" id="donutMonthBtns"></div>
-      <svg id="donutSvg" viewBox="0 0 220 220" width="220" height="220" style="flex-shrink:0;overflow:visible"></svg>
-      <div class="donut-legend" id="donutLegend"></div>
-    </div>
+    <div class="donut-3-grid" id="donut3Grid"></div>
   </div>
 
 
@@ -406,6 +403,7 @@
   <div class="panel">
     <h2>Customer &amp; Booking Details</h2>
     <p class="panel-sub">Every rental at a glance &mdash; hover a card for the full trip details</p>
+    <div class="cal-month-filter" id="custMonthBtns"></div>
     <div class="cust-grid" id="custCards"></div>
   </div>
 
@@ -578,7 +576,8 @@ function bestUtilMonth(mos, cars) {
 const _curKey = MNAMES[new Date().getMonth()].slice(0,3);
 let fMonth   = MONTHS.find(m => m.key === _curKey) ? _curKey : "All";
 let fCar     = "All";
-let calMonth = "All"; // local filter for Booking Calendar tab only
+let calMonth  = "All"; // local filter for Booking Calendar tab only
+let custMonth = "All"; // local filter for Customer & Booking Details
 
 function visMonths() {
   return fMonth === "All" ? MONTHS : MONTHS.filter(m => m.key === fMonth);
@@ -828,8 +827,7 @@ function renderCostRecovery() {
 //  RENDER: MONTHLY TREND
 // ═══════════════════════════════════════════════════════
 
-// ── Donut chart local state ──
-let dMonth = "All";
+// ── Donut helpers ──
 const _DTIPS = {};
 
 function sectorPath(cx, cy, R, r, startDeg, endDeg) {
@@ -842,88 +840,77 @@ function sectorPath(cx, cy, R, r, startDeg, endDeg) {
 }
 
 function renderDonutChart() {
-  const cars = fCar === "All" ? ["Chevy","Mustang"] : [fCar];
+  const cars  = fCar === "All" ? ["Chevy","Mustang"] : [fCar];
+  const last3 = MONTHS.slice(-3);
+  const fmtSgn = v => (v < 0 ? "−" : "") + fmt$(v);
+  const cx=90, cy=90, Ro=72, Ri=44;
 
-  // Build local month filter buttons
-  const keys = ["All", ...MONTHS.map(m => m.key)];
-  $("donutMonthBtns").innerHTML = keys.map(k => {
-    const lbl = k === "All" ? "All" : k;
-    return `<button class="fbtn${dMonth===k?" active":""}" onclick="dMonth='${k}';renderDonutChart()">${lbl}</button>`;
+  $("donut3Grid").innerHTML = last3.map(mo => {
+    const bks = BOOKINGS.filter(b => cars.includes(b.car) && b.payMonth === mo.key);
+    const exs = EXPENSES.filter(e => cars.includes(e.car) && e.month   === mo.key);
+    const inc = sum(bks.map(b => b.income));
+    const exp = sum(exs.map(e => e.amount));
+    const net = inc - exp;
+
+    // Store tooltip data keyed by month
+    const cats = {};
+    exs.forEach(e => { cats[e.category] = (cats[e.category]||0) + e.amount; });
+    const catLines = Object.entries(cats).sort((a,b) => b[1]-a[1])
+      .map(([c,v]) => `<span style="opacity:.7">${c}</span>&nbsp;&nbsp;${fmt$(v)}`).join("<br>");
+    _DTIPS[`inc_${mo.key}`] = `<strong>Income&nbsp;&nbsp;${fmt$(inc)}</strong><br><span style="opacity:.7">${bks.length} booking${bks.length!==1?"s":""}</span>`;
+    _DTIPS[`exp_${mo.key}`] = exp > 0
+      ? `<strong>Expenses&nbsp;&nbsp;${fmt$(exp)}</strong><br>${catLines}`
+      : `<strong>Expenses</strong><br><span style="opacity:.7">None</span>`;
+
+    const total = inc + exp;
+    let svgInner = "";
+    if (total < 0.01) {
+      svgInner = `<text x="90" y="95" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="Arial">No data</text>`;
+    } else {
+      const incFrac = inc / total;
+      const incDeg  = incFrac * 360;
+      let paths = "";
+      if (incFrac > 0.999) {
+        paths = `<circle class="donut-sector" cx="${cx}" cy="${cy}" r="${(Ro+Ri)/2}" stroke="var(--green)" stroke-width="${Ro-Ri}" fill="none" data-tip="inc_${mo.key}"/>`;
+      } else if (incFrac < 0.001) {
+        paths = `<circle class="donut-sector" cx="${cx}" cy="${cy}" r="${(Ro+Ri)/2}" stroke="var(--red)"   stroke-width="${Ro-Ri}" fill="none" data-tip="exp_${mo.key}"/>`;
+      } else {
+        paths = `<path class="donut-sector" d="${sectorPath(cx,cy,Ro,Ri,0,incDeg)}"      fill="var(--green)" data-tip="inc_${mo.key}"/>
+                 <path class="donut-sector" d="${sectorPath(cx,cy,Ro,Ri,incDeg,359.99)}" fill="var(--red)"   data-tip="exp_${mo.key}"/>`;
+      }
+      const netColor = net >= 0 ? "var(--green)" : "var(--red)";
+      svgInner = `${paths}
+        <circle cx="${cx}" cy="${cy}" r="${Ri-1}" fill="var(--panel)"/>
+        <text x="${cx}" y="${cy-7}"  text-anchor="middle" font-size="9"  fill="var(--muted)" font-family="Arial">Net P/L</text>
+        <text x="${cx}" y="${cy+10}" text-anchor="middle" font-size="12" font-weight="800" fill="${netColor}" font-family="Arial">${net<0?"−":"+"}${fmt$(net)}</text>`;
+    }
+
+    const legendItems = [
+      { color:"var(--green)",                    lbl:"Income",   val:fmt$(inc),                          cls:"good" },
+      { color:"var(--red)",                      lbl:"Expenses", val:fmt$(exp),                          cls:"bad"  },
+      { color:net>=0?"var(--blue)":"var(--red)", lbl:"Net P/L",  val:(net>=0?"+":"")+fmtSgn(net),        cls:net>=0?"good":"bad" },
+    ];
+
+    return `
+      <div class="donut-card">
+        <div class="donut-card-title">${mo.label}</div>
+        <svg viewBox="0 0 180 180" width="180" height="180" style="overflow:visible">${svgInner}</svg>
+        <div class="donut-3-legend">
+          ${legendItems.map(it => `
+            <div class="dl3-item">
+              <div class="dl3-dot" style="background:${it.color}"></div>
+              <span class="dl3-lbl">${it.lbl}</span>
+              <span class="dl3-val ${it.cls}">${it.val}</span>
+            </div>`).join("")}
+        </div>
+      </div>`;
   }).join("");
 
-  const bkF = b => cars.includes(b.car) && (dMonth==="All" || b.payMonth===dMonth);
-  const exF = e => cars.includes(e.car) && (dMonth==="All" || e.month===dMonth);
-
-  const bks = BOOKINGS.filter(bkF);
-  const exs = EXPENSES.filter(exF);
-  const inc = sum(bks.map(b => b.income));
-  const exp = sum(exs.map(e => e.amount));
-  const net = inc - exp;
-
-  // Build tooltip content
-  const cats = {};
-  exs.forEach(e => { cats[e.category] = (cats[e.category] || 0) + e.amount; });
-  const catLines = Object.entries(cats).sort((a,b) => b[1]-a[1])
-    .map(([c,v]) => `<span style="opacity:.7">${c}</span>&nbsp;&nbsp;${fmt$(v)}`).join("<br>");
-
-  _DTIPS.inc = `<strong>Income&nbsp;&nbsp;${fmt$(inc)}</strong><br><span style="opacity:.7">${bks.length} booking${bks.length!==1?"s":""}</span>`;
-  _DTIPS.exp = exp > 0
-    ? `<strong>Expenses&nbsp;&nbsp;${fmt$(exp)}</strong><br>${catLines}`
-    : `<strong>Expenses</strong><br><span style="opacity:.7">None for this selection</span>`;
-
-  const svg   = $("donutSvg");
-  const cx=110, cy=110, Ro=88, Ri=54;
-  const total = inc + exp;
-
-  if (total < 0.01) {
-    svg.innerHTML = `<text x="110" y="116" text-anchor="middle" font-size="13" fill="var(--muted)" font-family="Arial">No data</text>`;
-    $("donutLegend").innerHTML = "";
-    return;
-  }
-
-  const incFrac = inc / total;
-  const incDeg  = incFrac * 360;
-
-  let paths = "";
-  if (incFrac > 0.999) {
-    paths = `<circle class="donut-sector" cx="${cx}" cy="${cy}" r="${(Ro+Ri)/2}" stroke="var(--green)" stroke-width="${Ro-Ri}" fill="none" data-tip="inc"/>`;
-  } else if (incFrac < 0.001) {
-    paths = `<circle class="donut-sector" cx="${cx}" cy="${cy}" r="${(Ro+Ri)/2}" stroke="var(--red)" stroke-width="${Ro-Ri}" fill="none" data-tip="exp"/>`;
-  } else {
-    paths = `
-      <path class="donut-sector" d="${sectorPath(cx,cy,Ro,Ri,0,incDeg)}"       fill="var(--green)" data-tip="inc"/>
-      <path class="donut-sector" d="${sectorPath(cx,cy,Ro,Ri,incDeg,359.99)}"  fill="var(--red)"   data-tip="exp"/>`;
-  }
-
-  const netColor = net >= 0 ? "var(--green)" : "var(--red)";
-  const netSign  = net < 0 ? "−" : "+";
-
-  svg.innerHTML = `
-    ${paths}
-    <circle cx="${cx}" cy="${cy}" r="${Ri-1}" fill="var(--panel)"/>
-    <text x="${cx}" y="${cy-9}"  text-anchor="middle" font-size="10" fill="var(--muted)"   font-family="Arial,sans-serif">Net P/L</text>
-    <text x="${cx}" y="${cy+12}" text-anchor="middle" font-size="14" font-weight="800" fill="${netColor}" font-family="Arial,sans-serif">${netSign}${fmt$(net)}</text>
-  `;
-
-  svg.querySelectorAll(".donut-sector").forEach(el => {
+  document.querySelectorAll(".donut-sector").forEach(el => {
     el.addEventListener("mouseenter", e => { const t=$("donutTip"); t.innerHTML=_DTIPS[el.dataset.tip]; t.style.display="block"; moveDonutTip(e); });
     el.addEventListener("mousemove",  moveDonutTip);
     el.addEventListener("mouseleave", () => { $("donutTip").style.display="none"; });
   });
-
-  const fmtSgn = v => (v < 0 ? "−" : "") + fmt$(v);
-  $("donutLegend").innerHTML = [
-    { color:"var(--green)",                           lbl:"Income",   val:fmt$(inc),     cls:"good" },
-    { color:"var(--red)",                             lbl:"Expenses", val:fmt$(exp),     cls:"bad"  },
-    { color:net>=0?"var(--blue)":"var(--red)",        lbl:"Net P/L",  val:(net>=0?"+":"")+fmtSgn(net), cls:net>=0?"good":"bad" },
-  ].map(it => `
-    <div class="dl-item">
-      <div class="dl-dot" style="background:${it.color}"></div>
-      <div>
-        <div class="dl-lbl">${it.lbl}</div>
-        <div class="dl-val ${it.cls}">${it.val}</div>
-      </div>
-    </div>`).join("");
 }
 
 function moveDonutTip(e) {
@@ -1045,7 +1032,15 @@ function renderCalendar() {
 // ═══════════════════════════════════════════════════════
 
 function renderCustomerCards() {
-  const bk = visBookings();
+  // Local month filter buttons
+  $("custMonthBtns").innerHTML = ["All", ...MONTHS.map(m => m.key)].map(k =>
+    `<button class="fbtn${custMonth===k?" active":""}" onclick="custMonth='${k}';renderCustomerCards()">${k}</button>`
+  ).join("");
+
+  const bk = BOOKINGS.filter(b =>
+    (fCar === "All" || b.car === fCar) &&
+    (custMonth === "All" || b.payMonth === custMonth)
+  );
   if (!bk.length) {
     $("custCards").innerHTML = `<p class="no-data">No bookings for current filter.</p>`;
     return;
