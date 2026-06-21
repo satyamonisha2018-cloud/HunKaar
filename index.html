@@ -671,7 +671,7 @@ function renderKPIs() {
 
   const cards = [
     { lbl:"Total Income",    val:fmt$(income),   cls:"c-blue",  note:"All rental revenue" },
-    { lbl:"Total Expenses",  val:fmt$(expenses), cls:"",        note:"Operating costs only" },
+    { lbl:"Total Expenses",  val:fmt$(expenses), cls:"c-red",   note:"Operating costs only" },
     { lbl:"Net Profit",      val:fmt$(profit),   cls:profit>=0?"c-green":"c-red",   note:"Income − expenses" },
     { lbl:"Profit Margin",   val:income>0?fmtPct(margin):"—", cls:margin>=.7?"c-green":margin>=.4?"c-gold":"c-red", note:"Net ÷ income" },
     { lbl:"Total Bookings",  val:bk.length,      cls:"c-teal",  note:cars.join(" + ") + " combined" },
