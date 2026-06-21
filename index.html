@@ -170,11 +170,6 @@
     .panel h2 { font-size: 16px; margin-bottom: 3px; }
     .panel-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
 
-    /* ── Expense bar charts (used by Expense Breakdown) ── */
-    .bar-track { background: #edf2f8; border-radius: 3px; height: 16px; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 3px; transition: width .35s ease; }
-    .bf-expense { background: var(--red); }
-    .bar-val { font-size: 11.5px; font-weight: 700; text-align: right; }
 
     /* ── Donut Chart ── */
     .donut-wrap { display: flex; gap: 32px; align-items: center; flex-wrap: wrap; }
@@ -403,12 +398,6 @@
     </div>
   </div>
 
-  <!-- ── Expense Breakdown ── -->
-  <div class="panel">
-    <h2>Expense Breakdown</h2>
-    <p class="panel-sub">Operating costs by category and item</p>
-    <div id="expenseBreakdown"></div>
-  </div>
 
   <!-- ── Customer & Booking Cards ── -->
   <div class="panel">
@@ -1029,34 +1018,6 @@ function renderCalendar() {
 //  RENDER: EXPENSE BREAKDOWN
 // ═══════════════════════════════════════════════════════
 
-function renderExpenses() {
-  const ex = visExpenses();
-  if (!ex.length) {
-    $("expenseBreakdown").innerHTML = `<p class="no-data">No operating expenses recorded for this selection.</p>
-      <p style="font-size:12px;color:var(--muted);margin-top:4px">No expenses recorded for this filter selection.</p>`;
-    return;
-  }
-
-  // By category
-  const cats = {};
-  ex.forEach(e => { cats[e.category] = (cats[e.category] || 0) + e.amount; });
-  const catArr = Object.entries(cats).sort((a,b) => b[1]-a[1]);
-  const maxCat = Math.max(...catArr.map(c=>c[1]),1);
-
-  let html = `<div class="section-lbl">By Category</div>`;
-  catArr.forEach(([cat,amt]) => {
-    const pct = (amt/maxCat)*100;
-    html += `
-      <div class="exp-row">
-        <span class="exp-lbl">${cat}</span>
-        <div class="bar-track"><div class="bar-fill bf-expense" style="width:${pct}%"></div></div>
-        <span class="bar-val bad">${fmt$(amt)}</span>
-      </div>
-    `;
-  });
-
-  $("expenseBreakdown").innerHTML = html;
-}
 
 // ═══════════════════════════════════════════════════════
 //  RENDER: CUSTOMER & BOOKING CARDS
@@ -1120,7 +1081,6 @@ function render() {
   renderDonutChart();
   renderBookingKPIs();
   renderCalendar();
-  renderExpenses();
   renderCustomerCards();
 }
 
