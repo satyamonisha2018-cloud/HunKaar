@@ -715,7 +715,7 @@ function renderCarKPIs() {
           <h3>${label}</h3>
         </div>
         <div class="car-metrics">
-          <div class="cm"><div class="v" style="color:${valColor}">${fmt$(income)}</div><div class="l">Income</div></div>
+          <div class="cm"><div class="v" style="color:${valColor}">${fmt$(income)} <span style="font-size:12px;font-weight:600;color:var(--muted)">(${bk.length} booking${bk.length!==1?"s":""})</span></div><div class="l">Income</div></div>
           <div class="cm"><div class="v c-red">${fmt$(expenses)}</div><div class="l">Expenses</div></div>
           <div class="cm"><div class="v ${profit>=0?"c-green":"c-red"}">${fmt$(profit)}</div><div class="l">Net P/L</div></div>
           <div class="cm"><div class="v c-teal">${booked}</div><div class="l">Booked Days</div></div>
