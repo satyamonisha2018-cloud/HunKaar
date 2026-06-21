@@ -466,22 +466,36 @@ const BOOKINGS = [
 ];
 
 const EXPENSES = [
-  // Monthly parking — Chevy ($45) and Mustang ($250) each month
-  { month:"Feb", car:"Chevy",   desc:"Chevy Parking",   category:"Parking", amount:45.00  },
-  { month:"Feb", car:"Mustang", desc:"Mustang Parking",  category:"Parking", amount:250.00 },
-  { month:"Mar", car:"Chevy",   desc:"Chevy Parking",   category:"Parking", amount:45.00  },
-  { month:"Mar", car:"Mustang", desc:"Mustang Parking",  category:"Parking", amount:250.00 },
-  { month:"Mar", car:"Chevy",   desc:"Gas",              category:"Fuel",    amount:6.14   },
-  { month:"Mar", car:"Chevy",   desc:"Prime Car Wash",   category:"Cleaning", amount:44.00 },
-  { month:"Mar", car:"Chevy",   desc:"Air Freshener",    category:"Cleaning", amount:2.00  },
-  { month:"Mar", car:"Chevy",   desc:"Headlight",        category:"Maintenance", amount:25.00 },
-  { month:"Mar", car:"Chevy",   desc:"Fuel",             category:"Fuel",    amount:31.00  },
-  { month:"Apr", car:"Chevy",   desc:"Chevy Parking",   category:"Parking", amount:45.00  },
-  { month:"Apr", car:"Mustang", desc:"Mustang Parking",  category:"Parking", amount:250.00 },
-  { month:"May", car:"Chevy",   desc:"Chevy Parking",   category:"Parking", amount:45.00  },
-  { month:"May", car:"Mustang", desc:"Mustang Parking",  category:"Parking", amount:250.00 },
-  { month:"Jun", car:"Chevy",   desc:"Chevy Parking",   category:"Parking", amount:45.00  },
-  { month:"Jun", car:"Mustang", desc:"Mustang Parking",  category:"Parking", amount:250.00 },
+  // Feb — parking + insurance (Chevy $700/6mo=$116.67, Mustang $900/6mo=$150)
+  { month:"Feb", car:"Chevy",   desc:"Chevy Parking",      category:"Parking",   amount:45.00   },
+  { month:"Feb", car:"Chevy",   desc:"Chevy Insurance",    category:"Insurance", amount:116.67  },
+  { month:"Feb", car:"Mustang", desc:"Mustang Parking",    category:"Parking",   amount:250.00  },
+  { month:"Feb", car:"Mustang", desc:"Mustang Insurance",  category:"Insurance", amount:150.00  },
+  // Mar — parking + insurance + operating costs
+  { month:"Mar", car:"Chevy",   desc:"Chevy Parking",      category:"Parking",   amount:45.00   },
+  { month:"Mar", car:"Chevy",   desc:"Chevy Insurance",    category:"Insurance", amount:116.67  },
+  { month:"Mar", car:"Chevy",   desc:"Gas",                category:"Fuel",      amount:6.14    },
+  { month:"Mar", car:"Chevy",   desc:"Prime Car Wash",     category:"Cleaning",  amount:44.00   },
+  { month:"Mar", car:"Chevy",   desc:"Air Freshener",      category:"Cleaning",  amount:2.00    },
+  { month:"Mar", car:"Chevy",   desc:"Headlight",          category:"Maintenance", amount:25.00 },
+  { month:"Mar", car:"Chevy",   desc:"Fuel",               category:"Fuel",      amount:31.00   },
+  { month:"Mar", car:"Mustang", desc:"Mustang Parking",    category:"Parking",   amount:250.00  },
+  { month:"Mar", car:"Mustang", desc:"Mustang Insurance",  category:"Insurance", amount:150.00  },
+  // Apr
+  { month:"Apr", car:"Chevy",   desc:"Chevy Parking",      category:"Parking",   amount:45.00   },
+  { month:"Apr", car:"Chevy",   desc:"Chevy Insurance",    category:"Insurance", amount:116.67  },
+  { month:"Apr", car:"Mustang", desc:"Mustang Parking",    category:"Parking",   amount:250.00  },
+  { month:"Apr", car:"Mustang", desc:"Mustang Insurance",  category:"Insurance", amount:150.00  },
+  // May
+  { month:"May", car:"Chevy",   desc:"Chevy Parking",      category:"Parking",   amount:45.00   },
+  { month:"May", car:"Chevy",   desc:"Chevy Insurance",    category:"Insurance", amount:116.67  },
+  { month:"May", car:"Mustang", desc:"Mustang Parking",    category:"Parking",   amount:250.00  },
+  { month:"May", car:"Mustang", desc:"Mustang Insurance",  category:"Insurance", amount:150.00  },
+  // Jun
+  { month:"Jun", car:"Chevy",   desc:"Chevy Parking",      category:"Parking",   amount:45.00   },
+  { month:"Jun", car:"Chevy",   desc:"Chevy Insurance",    category:"Insurance", amount:116.67  },
+  { month:"Jun", car:"Mustang", desc:"Mustang Parking",    category:"Parking",   amount:250.00  },
+  { month:"Jun", car:"Mustang", desc:"Mustang Insurance",  category:"Insurance", amount:150.00  },
 ];
 
 // Purchase price per car — capital cost to recover before the vehicle is "in profit"
