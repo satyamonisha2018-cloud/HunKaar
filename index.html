@@ -575,7 +575,8 @@ function bestUtilMonth(mos, cars) {
 //  FILTER STATE
 // ═══════════════════════════════════════════════════════
 
-let fMonth   = "All";
+const _curKey = MNAMES[new Date().getMonth()].slice(0,3);
+let fMonth   = MONTHS.find(m => m.key === _curKey) ? _curKey : "All";
 let fCar     = "All";
 let calMonth = "All"; // local filter for Booking Calendar tab only
 
