@@ -357,9 +357,9 @@
   <!-- ── Hero ── -->
   <header class="hero">
     <div>
-      <div class="eyebrow">Rental Car Business &bull; Wave Export &bull; Feb&ndash;Jun 2026</div>
+      <div class="eyebrow" id="hero-eyebrow">Rental Car Business &bull; Wave Export</div>
       <h1>HunKaar Dashboard</h1>
-      <p>2014 Chevy Cruze &nbsp;&bull;&nbsp; 2019 Ford Mustang GT &nbsp;&bull;&nbsp; 11 bookings &nbsp;&bull;&nbsp; 4 months of data</p>
+      <p id="hero-sub">2014 Chevy Cruze &nbsp;&bull;&nbsp; 2019 Ford Mustang GT</p>
     </div>
     <div class="hero-stats">
       <div class="hero-stat">
@@ -684,6 +684,10 @@ function renderKPIs() {
   $("h-income").textContent = fmt$(allInc);
   $("h-profit").textContent = (allNet < 0 ? "−" : "") + fmt$(allNet);
   $("h-util").textContent   = fmtPct(allAvail > 0 ? allBooked / allAvail : 0);
+  const _firstMo = MONTHS[0].label, _lastMo = MONTHS[MONTHS.length-1].label;
+  const _moRange = _firstMo === _lastMo ? _firstMo : `${_firstMo.split(" ")[0]}–${_lastMo}`;
+  $("hero-eyebrow").textContent = `Rental Car Business • Wave Export • ${_moRange}`;
+  $("hero-sub").innerHTML = `2014 Chevy Cruze &nbsp;&bull;&nbsp; 2019 Ford Mustang GT &nbsp;&bull;&nbsp; ${BOOKINGS.length} bookings &nbsp;&bull;&nbsp; ${MONTHS.length} months of data`;
 
   const cards = [
     { lbl:"Total Income",    val:fmt$(income),   cls:"c-blue",  note:"All rental revenue" },
