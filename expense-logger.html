@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HunKaar — Expense Logger</title>
+  <style>
+    :root {
+      --ink:    #152033;
+      --muted:  #657287;
+      --paper:  #fbfcff;
+      --panel:  #ffffff;
+      --line:   #dce4ef;
+      --blue:   #2457c5;
+      --teal:   #008f86;
+      --gold:   #d67a18;
+      --red:    #c3423f;
+      --green:  #238957;
+      --violet: #6f4bd8;
+      --shadow: 0 8px 24px rgba(29,46,73,.10);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(135deg,rgba(36,87,197,.15),rgba(0,143,134,.11),rgba(214,122,24,.09)),#edf2f8;
+      min-height: 100vh;
+      color: var(--ink);
+    }
+    .shell { width: min(520px, calc(100% - 24px)); margin: 0 auto; padding: 28px 0 56px; }
+
+    /* ── Header ── */
+    .hdr { text-align: center; margin-bottom: 24px; }
+    .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
+    .hdr h1 { font-size: 24px; font-weight: 900; color: var(--ink); }
+    .hdr p  { font-size: 13px; color: var(--muted); margin-top: 5px; }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; background: var(--panel); border-radius: 10px; padding: 4px; box-shadow: var(--shadow); margin-bottom: 20px; gap: 4px; }
+    .tab  { flex: 1; padding: 11px; text-align: center; font-size: 13px; font-weight: 700; border-radius: 7px; cursor: pointer; border: none; background: transparent; color: var(--muted); transition: all .15s; font-family: inherit; }
+    .tab.active { background: var(--blue); color: #fff; }
+
+    /* ── Panel ── */
+    .panel { background: var(--panel); border-radius: 10px; padding: 24px; box-shadow: var(--shadow); }
+
+    /* ── Form fields ── */
+    .field { margin-bottom: 18px; }
+    .field label { display: block; font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+    .field input, .field select, .field textarea {
+      width: 100%; padding: 11px 13px; border: 1.5px solid var(--line); border-radius: 8px;
+      font-size: 14px; color: var(--ink); font-family: inherit; background: var(--paper); transition: border-color .15s;
+    }
+    .field input:focus, .field select:focus { outline: none; border-color: var(--blue); }
+    .amount-wrap { position: relative; }
+    .amount-wrap .prefix { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 14px; font-weight: 700; color: var(--muted); pointer-events: none; }
+    .amount-wrap input { padding-left: 26px; }
+
+    /* ── Toggle buttons ── */
+    .tgl-group { display: flex; gap: 8px; }
+    .tgl {
+      flex: 1; padding: 11px 8px; border: 1.5px solid var(--line); border-radius: 8px;
+      background: var(--paper); color: var(--muted); font-size: 13px; font-weight: 700;
+      cursor: pointer; text-align: center; transition: all .15s; user-select: none;
+    }
+    .tgl:hover { border-color: var(--blue); }
+    .tgl.sel-chevy    { border-color: var(--blue);   background: rgba(36,87,197,.08);  color: var(--blue);   }
+    .tgl.sel-mustang  { border-color: var(--gold);   background: rgba(214,122,24,.08); color: var(--gold);   }
+    .tgl.sel-fuel     { border-color: var(--teal);   background: rgba(0,143,134,.08);  color: var(--teal);   }
+    .tgl.sel-maint    { border-color: var(--violet); background: rgba(111,75,216,.08); color: var(--violet); }
+
+    /* ── Submit ── */
+    .btn-submit {
+      width: 100%; padding: 14px; background: var(--blue); color: #fff; border: none;
+      border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; margin-top: 4px;
+      transition: background .15s; font-family: inherit;
+    }
+    .btn-submit:hover  { background: #1a3d9e; }
+    .btn-submit:active { background: #132e7a; }
+
+    /* ── Toast ── */
+    .toast {
+      display: none; background: var(--green); color: #fff; padding: 13px 16px;
+      border-radius: 8px; font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 16px;
+      animation: fadeIn .2s ease;
+    }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(-4px) } to { opacity:1; transform:none } }
+
+    /* ── Review header ── */
+    .rev-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .rev-hdr h2 { font-size: 16px; font-weight: 800; }
+    .badge { font-size: 12px; font-weight: 700; padding: 4px 11px; border-radius: 20px; background: rgba(195,66,63,.12); color: var(--red); }
+    .badge.zero { background: rgba(35,137,87,.12); color: var(--green); }
+
+    /* ── Filter row ── */
+    .frow { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+    .fbtn { padding: 5px 13px; border-radius: 6px; border: 1.5px solid var(--line); background: var(--paper); color: var(--muted); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .12s; }
+    .fbtn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+    /* ── Entry cards ── */
+    .entry-card {
+      border: 1.5px solid var(--line); border-radius: 8px; padding: 13px 14px;
+      margin-bottom: 10px; display: flex; align-items: center; gap: 12px; transition: opacity .2s;
+    }
+    .entry-card.done { opacity: .5; background: rgba(35,137,87,.03); border-color: rgba(35,137,87,.25); }
+    .entry-icon { width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .ic-fuel  { background: rgba(0,143,134,.12); }
+    .ic-maint { background: rgba(111,75,216,.12); }
+    .entry-main { flex: 1; min-width: 0; }
+    .entry-title { font-size: 13.5px; font-weight: 800; color: var(--ink); }
+    .entry-meta  { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+    .entry-right { text-align: right; flex-shrink: 0; }
+    .entry-amt   { font-size: 15px; font-weight: 800; color: var(--ink); }
+    .wave-row    { display: flex; align-items: center; justify-content: flex-end; gap: 5px; margin-top: 5px; }
+    .wave-lbl    { font-size: 10px; color: var(--muted); font-weight: 600; }
+    .wave-check  { width: 17px; height: 17px; cursor: pointer; accent-color: var(--green); }
+
+    .empty-state { text-align: center; padding: 44px 20px; color: var(--muted); font-size: 13px; }
+    .empty-state span { display: block; font-size: 32px; margin-bottom: 10px; }
+
+    .section { display: none; }
+    .section.visible { display: block; }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <div class="hdr">
+    <div class="eyebrow">HunKaar Rentals</div>
+    <h1>Expense Logger</h1>
+    <p>Fuel &amp; maintenance — log it, track it, mark it done</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('log')">＋ Log Expense</button>
+    <button class="tab" id="revTabBtn" onclick="switchTab('review')">Review Entries</button>
+  </div>
+
+  <!-- ═══ LOG SECTION ═══ -->
+  <div class="section visible" id="sec-log">
+    <div class="toast" id="toast">✓ Expense logged!</div>
+    <div class="panel">
+
+      <div class="field">
+        <label>Which car?</label>
+        <div class="tgl-group">
+          <div class="tgl" id="tgl-chevy"   onclick="selCar='Chevy';   applyTgl()">🚗 Chevy Cruze</div>
+          <div class="tgl" id="tgl-mustang" onclick="selCar='Mustang'; applyTgl()">🐎 Mustang GT</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Category</label>
+        <div class="tgl-group">
+          <div class="tgl" id="tgl-fuel"  onclick="selCat='Fuel';        applyTgl()">⛽ Fuel</div>
+          <div class="tgl" id="tgl-maint" onclick="selCat='Maintenance'; applyTgl()">🔧 Maintenance</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Amount</label>
+        <div class="amount-wrap">
+          <span class="prefix">$</span>
+          <input type="number" id="inp-amt" placeholder="0.00" step="0.01" min="0">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="inp-date">
+      </div>
+
+      <div class="field">
+        <label>Description <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+        <input type="text" id="inp-desc" placeholder="e.g. Shell station, oil change at Jiffy Lube…">
+      </div>
+
+      <button class="btn-submit" onclick="submitExpense()">Log Expense</button>
+    </div>
+  </div>
+
+  <!-- ═══ REVIEW SECTION ═══ -->
+  <div class="section" id="sec-review">
+    <div class="panel">
+      <div class="rev-hdr">
+        <h2>All Expenses</h2>
+        <span class="badge" id="pending-badge">— pending</span>
+      </div>
+      <div class="frow">
+        <button class="fbtn active" onclick="setFilter('All')">All</button>
+        <button class="fbtn" onclick="setFilter('Pending')">Pending</button>
+        <button class="fbtn" onclick="setFilter('Done')">Entered in Wave</button>
+      </div>
+      <div id="entry-list"></div>
+    </div>
+  </div>
+
+</div>
+<script>
+  let selCar = null, selCat = null, revFilter = "All";
+
+  // Default date = today
+  document.getElementById("inp-date").value = new Date().toISOString().slice(0,10);
+
+  function applyTgl() {
+    document.getElementById("tgl-chevy").className   = "tgl" + (selCar==="Chevy"        ? " sel-chevy"   : "");
+    document.getElementById("tgl-mustang").className = "tgl" + (selCar==="Mustang"      ? " sel-mustang" : "");
+    document.getElementById("tgl-fuel").className    = "tgl" + (selCat==="Fuel"         ? " sel-fuel"    : "");
+    document.getElementById("tgl-maint").className   = "tgl" + (selCat==="Maintenance"  ? " sel-maint"   : "");
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll(".tab").forEach((t,i) =>
+      t.classList.toggle("active", (i===0 && tab==="log") || (i===1 && tab==="review")));
+    document.getElementById("sec-log").classList.toggle("visible",    tab==="log");
+    document.getElementById("sec-review").classList.toggle("visible", tab==="review");
+    if (tab === "review") renderReview();
+  }
+
+  function load()       { return JSON.parse(localStorage.getItem("hk_exp") || "[]"); }
+  function save(arr)    { localStorage.setItem("hk_exp", JSON.stringify(arr)); }
+
+  function submitExpense() {
+    if (!selCar) { alert("Please select a car."); return; }
+    if (!selCat) { alert("Please select a category."); return; }
+    const amt  = parseFloat(document.getElementById("inp-amt").value);
+    if (!amt || amt <= 0) { alert("Please enter a valid amount."); return; }
+    const date = document.getElementById("inp-date").value;
+    if (!date) { alert("Please pick a date."); return; }
+    const desc = document.getElementById("inp-desc").value.trim();
+
+    const arr = load();
+    arr.unshift({ id: Date.now(), car: selCar, category: selCat, amount: amt, date, desc, done: false });
+    save(arr);
+
+    // Reset
+    selCar = null; selCat = null; applyTgl();
+    document.getElementById("inp-amt").value  = "";
+    document.getElementById("inp-desc").value = "";
+    document.getElementById("inp-date").value = new Date().toISOString().slice(0,10);
+
+    const t = document.getElementById("toast");
+    t.style.display = "block";
+    setTimeout(() => t.style.display = "none", 2500);
+    refreshBadge();
+  }
+
+  function toggleDone(id) {
+    const arr = load();
+    const e   = arr.find(x => x.id === id);
+    if (e) { e.done = !e.done; save(arr); renderReview(); }
+  }
+
+  function setFilter(f) {
+    revFilter = f;
+    document.querySelectorAll(".frow .fbtn").forEach(b => b.classList.toggle("active", b.textContent.trim() === f));
+    renderReview();
+  }
+
+  function refreshBadge() {
+    const n = load().filter(e => !e.done).length;
+    const b = document.getElementById("pending-badge");
+    if (!b) return;
+    b.textContent = n + " pending";
+    b.className   = "badge" + (n === 0 ? " zero" : "");
+    // Also show count on tab button
+    document.getElementById("revTabBtn").textContent = "Review Entries" + (n ? ` (${n})` : "");
+  }
+
+  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  function fmtDate(d) {
+    const [y,m,day] = d.split("-");
+    return `${MONTHS[+m-1]} ${+day}, ${y}`;
+  }
+
+  function renderReview() {
+    refreshBadge();
+    let arr = load();
+    if (revFilter === "Pending") arr = arr.filter(e => !e.done);
+    if (revFilter === "Done")    arr = arr.filter(e =>  e.done);
+
+    const list = document.getElementById("entry-list");
+
+    if (!arr.length) {
+      const msg = revFilter === "Pending" ? "No pending expenses. All caught up!" :
+                  revFilter === "Done"    ? "Nothing marked as entered yet." :
+                                           "No expenses logged yet.";
+      list.innerHTML = `<div class="empty-state"><span>${revFilter==="Pending"?"✅":"📋"}</span>${msg}</div>`;
+      return;
+    }
+
+    list.innerHTML = arr.map(e => `
+      <div class="entry-card ${e.done ? "done" : ""}">
+        <div class="entry-icon ${e.category==="Fuel" ? "ic-fuel" : "ic-maint"}">
+          ${e.category==="Fuel" ? "⛽" : "🔧"}
+        </div>
+        <div class="entry-main">
+          <div class="entry-title">${e.category} — ${e.car === "Chevy" ? "Chevy Cruze" : "Mustang GT"}</div>
+          <div class="entry-meta">${fmtDate(e.date)}${e.desc ? " &bull; " + e.desc : ""}</div>
+        </div>
+        <div class="entry-right">
+          <div class="entry-amt">$${e.amount.toFixed(2)}</div>
+          <div class="wave-row">
+            <span class="wave-lbl">In Wave</span>
+            <input type="checkbox" class="wave-check" ${e.done ? "checked" : ""} onchange="toggleDone(${e.id})" title="Mark as entered in Wave">
+          </div>
+        </div>
+      </div>`).join("");
+  }
+
+  refreshBadge();
+</script>
+</body>
+</html>
