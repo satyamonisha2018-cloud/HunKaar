@@ -1,4 +1,4 @@
-const CACHE = 'hunkaar-v5';
+const CACHE = 'hunkaar-v6';
 const ASSETS = [
   './expense-logger.html',
   './manifest.json',
@@ -20,12 +20,20 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Network-first for Supabase API calls, cache-first for app shell
+  // Supabase API: always network, never cached.
   if (e.request.url.includes('supabase.co')) {
     e.respondWith(fetch(e.request).catch(() => new Response('', { status: 503 })));
-  } else {
-    e.respondWith(
-      caches.match(e.request).then(r => r || fetch(e.request))
-    );
+    return;
   }
+  // App shell: NETWORK-FIRST. Always fetch the latest when online so updates
+  // show on a normal refresh; fall back to cache only when offline.
+  e.respondWith(
+    fetch(e.request)
+      .then(res => {
+        const copy = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, copy));
+        return res;
+      })
+      .catch(() => caches.match(e.request))
+  );
 });

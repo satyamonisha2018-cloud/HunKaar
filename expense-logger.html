@@ -193,7 +193,7 @@
         <div class="tgl-group">
           <div class="tgl" id="tgl-fuel"  onclick="selCat='Fuel';        applyTgl()">⛽ Fuel</div>
           <div class="tgl" id="tgl-maint" onclick="selCat='Maintenance'; applyTgl()">🔧 Maintenance</div>
-          <div class="tgl" id="tgl-wash"  onclick="selCat='Car Wash';    applyTgl()">🧽 Car Wash</div>
+          <div class="tgl" id="tgl-wash"  onclick="selCat='Car Wash';    applyTgl()">🚗🧽🫧 Car Wash</div>
         </div>
       </div>
 
@@ -447,7 +447,7 @@
       <div class="entry-card ${e.done ? "done" : ""}">
         <div class="entry-top">
           <div class="entry-icon ${e.category==="Fuel" ? "ic-fuel" : e.category==="Car Wash" ? "ic-wash" : "ic-maint"}">
-            ${e.category==="Fuel" ? "⛽" : e.category==="Car Wash" ? "🧽" : "🔧"}
+            ${e.category==="Fuel" ? "⛽" : e.category==="Car Wash" ? "🧽🫧" : "🔧"}
           </div>
           <div class="entry-main">
             <div class="entry-title">${e.category} — ${e.car==="Chevy" ? "Chevy Cruze" : "Mustang GT"}</div>
