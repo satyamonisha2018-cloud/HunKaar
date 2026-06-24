@@ -1,0 +1,24 @@
+{
+  "name": "HunKaar Expense Logger",
+  "short_name": "HunKaar",
+  "description": "Log fuel and maintenance expenses for HunKaar car rentals",
+  "start_url": "./expense-logger.html",
+  "display": "standalone",
+  "background_color": "#edf2f8",
+  "theme_color": "#2457c5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

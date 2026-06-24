@@ -4,6 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>HunKaar — Expense Logger</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#2457c5">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="HunKaar">
+  <link rel="apple-touch-icon" href="./icons/icon.svg">
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     :root {
       --ink:    #152033;
@@ -28,21 +41,17 @@
     }
     .shell { width: min(520px, calc(100% - 24px)); margin: 0 auto; padding: 28px 0 56px; }
 
-    /* ── Header ── */
     .hdr { text-align: center; margin-bottom: 24px; }
     .eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
     .hdr h1 { font-size: 24px; font-weight: 900; color: var(--ink); }
     .hdr p  { font-size: 13px; color: var(--muted); margin-top: 5px; }
 
-    /* ── Tabs ── */
     .tabs { display: flex; background: var(--panel); border-radius: 10px; padding: 4px; box-shadow: var(--shadow); margin-bottom: 20px; gap: 4px; }
     .tab  { flex: 1; padding: 11px; text-align: center; font-size: 13px; font-weight: 700; border-radius: 7px; cursor: pointer; border: none; background: transparent; color: var(--muted); transition: all .15s; font-family: inherit; }
     .tab.active { background: var(--blue); color: #fff; }
 
-    /* ── Panel ── */
     .panel { background: var(--panel); border-radius: 10px; padding: 24px; box-shadow: var(--shadow); }
 
-    /* ── Form fields ── */
     .field { margin-bottom: 18px; }
     .field label { display: block; font-size: 11.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
     .field input[type="text"],
@@ -56,7 +65,6 @@
     .amount-wrap .prefix { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 14px; font-weight: 700; color: var(--muted); pointer-events: none; }
     .amount-wrap input { padding-left: 26px; }
 
-    /* ── Toggle buttons ── */
     .tgl-group { display: flex; gap: 8px; }
     .tgl {
       flex: 1; padding: 11px 8px; border: 1.5px solid var(--line); border-radius: 8px;
@@ -69,7 +77,6 @@
     .tgl.sel-fuel     { border-color: var(--teal);   background: rgba(0,143,134,.08);  color: var(--teal);   }
     .tgl.sel-maint    { border-color: var(--violet); background: rgba(111,75,216,.08); color: var(--violet); }
 
-    /* ── Receipt upload ── */
     .receipt-zone {
       border: 2px dashed var(--line); border-radius: 8px; padding: 18px;
       text-align: center; cursor: pointer; transition: all .15s; background: var(--paper); position: relative;
@@ -80,17 +87,14 @@
     .rz-icon  { font-size: 26px; margin-bottom: 6px; }
     .rz-label { font-size: 13px; font-weight: 700; color: var(--muted); }
     .rz-sub   { font-size: 11px; color: var(--muted); margin-top: 3px; }
-    .receipt-preview {
-      margin-top: 12px; border-radius: 8px; overflow: hidden; position: relative; display: none;
-    }
+    .receipt-preview { margin-top: 12px; border-radius: 8px; overflow: hidden; position: relative; display: none; }
     .receipt-preview img { width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; display: block; }
     .receipt-preview .remove-receipt {
       position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 50%;
       background: rgba(0,0,0,.55); color: #fff; border: none; cursor: pointer; font-size: 14px;
-      display: flex; align-items: center; justify-content: center; line-height: 1;
+      display: flex; align-items: center; justify-content: center;
     }
 
-    /* ── Submit ── */
     .btn-submit {
       width: 100%; padding: 14px; background: var(--blue); color: #fff; border: none;
       border-radius: 8px; font-size: 15px; font-weight: 800; cursor: pointer; margin-top: 4px;
@@ -98,8 +102,8 @@
     }
     .btn-submit:hover  { background: #1a3d9e; }
     .btn-submit:active { background: #132e7a; }
+    .btn-submit:disabled { background: var(--muted); cursor: not-allowed; }
 
-    /* ── Toast ── */
     .toast {
       display: none; background: var(--green); color: #fff; padding: 13px 16px;
       border-radius: 8px; font-size: 14px; font-weight: 700; text-align: center; margin-bottom: 16px;
@@ -107,22 +111,16 @@
     }
     @keyframes fadeIn { from { opacity:0; transform:translateY(-4px) } to { opacity:1; transform:none } }
 
-    /* ── Review header ── */
     .rev-hdr { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     .rev-hdr h2 { font-size: 16px; font-weight: 800; }
     .badge { font-size: 12px; font-weight: 700; padding: 4px 11px; border-radius: 20px; background: rgba(195,66,63,.12); color: var(--red); }
     .badge.zero { background: rgba(35,137,87,.12); color: var(--green); }
 
-    /* ── Filter row ── */
     .frow { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
     .fbtn { padding: 5px 13px; border-radius: 6px; border: 1.5px solid var(--line); background: var(--paper); color: var(--muted); font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all .12s; }
     .fbtn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
 
-    /* ── Entry cards ── */
-    .entry-card {
-      border: 1.5px solid var(--line); border-radius: 8px; padding: 13px 14px;
-      margin-bottom: 10px; transition: opacity .2s;
-    }
+    .entry-card { border: 1.5px solid var(--line); border-radius: 8px; padding: 13px 14px; margin-bottom: 10px; transition: opacity .2s; }
     .entry-card.done { opacity: .5; background: rgba(35,137,87,.03); border-color: rgba(35,137,87,.25); }
     .entry-top { display: flex; align-items: center; gap: 12px; }
     .entry-icon { width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
@@ -137,29 +135,21 @@
     .wave-lbl    { font-size: 10px; color: var(--muted); font-weight: 600; }
     .wave-check  { width: 17px; height: 17px; cursor: pointer; accent-color: var(--green); }
 
-    /* ── Receipt thumbnail in card ── */
     .entry-receipt { margin-top: 10px; }
-    .receipt-thumb {
-      width: 100%; max-height: 160px; object-fit: cover; border-radius: 6px;
-      cursor: pointer; display: block; border: 1px solid var(--line);
-    }
+    .receipt-thumb { width: 100%; max-height: 160px; object-fit: cover; border-radius: 6px; cursor: pointer; display: block; border: 1px solid var(--line); }
     .receipt-thumb:hover { opacity: .85; }
 
-    /* ── Lightbox ── */
-    .lightbox {
-      display: none; position: fixed; inset: 0; background: rgba(0,0,0,.82);
-      z-index: 1000; align-items: center; justify-content: center; padding: 20px;
-    }
+    .lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.82); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
     .lightbox.open { display: flex; }
     .lightbox img { max-width: 100%; max-height: 90vh; border-radius: 8px; object-fit: contain; }
-    .lb-close {
-      position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%;
-      background: rgba(255,255,255,.15); color: #fff; border: none; cursor: pointer;
-      font-size: 20px; display: flex; align-items: center; justify-content: center;
-    }
+    .lb-close { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.15); color: #fff; border: none; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; }
 
     .empty-state { text-align: center; padding: 44px 20px; color: var(--muted); font-size: 13px; }
     .empty-state span { display: block; font-size: 32px; margin-bottom: 10px; }
+
+    /* Config banner — shown when credentials not set */
+    .config-banner { background: rgba(214,122,24,.12); border: 1.5px solid var(--gold); border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; font-size: 13px; color: var(--ink); display: none; }
+    .config-banner strong { color: var(--gold); }
 
     .section { display: none; }
     .section.visible { display: block; }
@@ -172,6 +162,10 @@
     <div class="eyebrow">HunKaar Rentals</div>
     <h1>Expense Logger</h1>
     <p>Fuel &amp; maintenance — log it, track it, mark it done</p>
+  </div>
+
+  <div class="config-banner" id="configBanner">
+    <strong>Setup needed:</strong> Open this file and replace <code>YOUR_SUPABASE_URL</code> and <code>YOUR_SUPABASE_ANON_KEY</code> with your Supabase project credentials.
   </div>
 
   <div class="tabs">
@@ -225,7 +219,7 @@
           <div id="rz-placeholder">
             <div class="rz-icon">📷</div>
             <div class="rz-label">Take a photo or upload receipt</div>
-            <div class="rz-sub">Tap to open camera (on mobile) or choose a file</div>
+            <div class="rz-sub">Opens camera on mobile</div>
           </div>
         </div>
         <div class="receipt-preview" id="receipt-preview">
@@ -234,7 +228,7 @@
         </div>
       </div>
 
-      <button class="btn-submit" onclick="submitExpense()">Log Expense</button>
+      <button class="btn-submit" id="submitBtn" onclick="submitExpense()">Log Expense</button>
     </div>
   </div>
 
@@ -243,7 +237,7 @@
     <div class="panel">
       <div class="rev-hdr">
         <h2>All Expenses</h2>
-        <span class="badge" id="pending-badge">— pending</span>
+        <span class="badge" id="pending-badge">—</span>
       </div>
       <div class="frow">
         <button class="fbtn active" onclick="setFilter('All')">All</button>
@@ -256,17 +250,32 @@
 
 </div>
 
-<!-- ═══ LIGHTBOX ═══ -->
+<!-- Lightbox -->
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <button class="lb-close" onclick="closeLightbox()">✕</button>
   <img id="lb-img" src="" alt="Receipt">
 </div>
 
 <script>
+  // ─────────────────────────────────────────────
+  //  SUPABASE CONFIG — replace these two values
+  // ─────────────────────────────────────────────
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+  const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+  // ─────────────────────────────────────────────
+
+  const configured = !SUPABASE_URL.startsWith('YOUR');
+  if (!configured) document.getElementById("configBanner").style.display = "block";
+
+  const db = configured
+    ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+    : null;
+
   let selCar = null, selCat = null, revFilter = "All", receiptData = null;
 
   document.getElementById("inp-date").value = new Date().toISOString().slice(0,10);
 
+  // ── Toggle buttons ──
   function applyTgl() {
     document.getElementById("tgl-chevy").className   = "tgl" + (selCar==="Chevy"       ? " sel-chevy"   : "");
     document.getElementById("tgl-mustang").className = "tgl" + (selCar==="Mustang"     ? " sel-mustang" : "");
@@ -282,14 +291,14 @@
     if (tab === "review") renderReview();
   }
 
-  // ── Receipt handling ──
+  // ── Receipt ──
   function previewReceipt(input) {
     const file = input.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = e => {
       receiptData = e.target.result;
-      document.getElementById("receipt-img").src     = receiptData;
+      document.getElementById("receipt-img").src              = receiptData;
       document.getElementById("receipt-preview").style.display = "block";
       document.getElementById("rz-placeholder").style.display  = "none";
       document.getElementById("receipt-zone").classList.add("has-file");
@@ -314,12 +323,20 @@
     document.getElementById("lightbox").classList.remove("open");
   }
 
-  // ── Storage ──
-  function load()    { return JSON.parse(localStorage.getItem("hk_exp") || "[]"); }
-  function save(arr) { localStorage.setItem("hk_exp", JSON.stringify(arr)); }
+  // ── Supabase data functions ──
+  async function fetchAll() {
+    if (!db) return [];
+    const { data, error } = await db.from('expenses')
+      .select('*')
+      .order('date', { ascending: false })
+      .order('created_at', { ascending: false });
+    if (error) { console.error(error); return []; }
+    return data || [];
+  }
 
   // ── Submit ──
-  function submitExpense() {
+  async function submitExpense() {
+    if (!configured) { alert("Supabase not configured yet. See the banner at the top."); return; }
     if (!selCar) { alert("Please select a car."); return; }
     if (!selCat) { alert("Please select a category."); return; }
     const amt  = parseFloat(document.getElementById("inp-amt").value);
@@ -328,62 +345,96 @@
     if (!date) { alert("Please pick a date."); return; }
     const desc = document.getElementById("inp-desc").value.trim();
 
-    const arr = load();
-    arr.unshift({ id: Date.now(), car: selCar, category: selCat, amount: amt, date, desc, receipt: receiptData, done: false });
-    save(arr);
+    const btn = document.getElementById("submitBtn");
+    btn.textContent = "Saving…";
+    btn.disabled    = true;
 
-    // Reset form
-    selCar = null; selCat = null; applyTgl();
-    document.getElementById("inp-amt").value  = "";
-    document.getElementById("inp-desc").value = "";
-    document.getElementById("inp-date").value = new Date().toISOString().slice(0,10);
-    removeReceipt();
+    try {
+      const { error } = await db.from('expenses').insert([{
+        car:         selCar,
+        category:    selCat,
+        amount:      amt,
+        date:        date,
+        description: desc || null,
+        receipt:     receiptData || null,
+        done:        false
+      }]);
+      if (error) throw error;
 
-    const t = document.getElementById("toast");
-    t.style.display = "block";
-    setTimeout(() => t.style.display = "none", 2500);
-    refreshBadge();
+      selCar = null; selCat = null; applyTgl();
+      document.getElementById("inp-amt").value  = "";
+      document.getElementById("inp-desc").value = "";
+      document.getElementById("inp-date").value = new Date().toISOString().slice(0,10);
+      removeReceipt();
+
+      const t = document.getElementById("toast");
+      t.style.display = "block";
+      setTimeout(() => t.style.display = "none", 2500);
+      await updateBadge();
+
+    } catch (err) {
+      alert("Failed to save. Check your connection and try again.");
+      console.error(err);
+    } finally {
+      btn.textContent = "Log Expense";
+      btn.disabled    = false;
+    }
   }
 
-  function toggleDone(id) {
-    const arr = load();
-    const e   = arr.find(x => x.id === id);
-    if (e) { e.done = !e.done; save(arr); renderReview(); }
+  // ── Toggle Wave status ──
+  async function toggleDone(id, currentDone) {
+    if (!db) return;
+    await db.from('expenses').update({ done: !currentDone }).eq('id', id);
+    await renderReview();
   }
 
   function setFilter(f) {
     revFilter = f;
-    document.querySelectorAll(".frow .fbtn").forEach(b => b.classList.toggle("active", b.textContent.trim() === f));
+    document.querySelectorAll(".frow .fbtn").forEach(b =>
+      b.classList.toggle("active", b.textContent.trim() === f));
     renderReview();
   }
 
-  function refreshBadge() {
-    const n = load().filter(e => !e.done).length;
+  async function updateBadge() {
+    if (!db) return;
+    const { count } = await db.from('expenses')
+      .select('*', { count: 'exact', head: true })
+      .eq('done', false);
+    const n = count || 0;
     const b = document.getElementById("pending-badge");
-    if (!b) return;
-    b.textContent = n + " pending";
-    b.className   = "badge" + (n === 0 ? " zero" : "");
+    if (b) { b.textContent = n + " pending"; b.className = "badge" + (n===0?" zero":""); }
     document.getElementById("revTabBtn").textContent = "Review Entries" + (n ? ` (${n})` : "");
   }
 
-  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const MNAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   function fmtDate(d) {
     const [y,m,day] = d.split("-");
-    return `${MONTHS[+m-1]} ${+day}, ${y}`;
+    return `${MNAMES[+m-1]} ${+day}, ${y}`;
   }
 
-  function renderReview() {
-    refreshBadge();
-    let arr = load();
+  async function renderReview() {
+    const list = document.getElementById("entry-list");
+
+    if (!configured) {
+      list.innerHTML = `<div class="empty-state"><span>⚙️</span>Add your Supabase credentials to see entries.</div>`;
+      return;
+    }
+
+    list.innerHTML = `<div class="empty-state"><span>⏳</span>Loading…</div>`;
+    const all = await fetchAll();
+
+    const pending = all.filter(e => !e.done).length;
+    const b = document.getElementById("pending-badge");
+    if (b) { b.textContent = pending + " pending"; b.className = "badge" + (pending===0?" zero":""); }
+    document.getElementById("revTabBtn").textContent = "Review Entries" + (pending ? ` (${pending})` : "");
+
+    let arr = all;
     if (revFilter === "Pending") arr = arr.filter(e => !e.done);
     if (revFilter === "Done")    arr = arr.filter(e =>  e.done);
 
-    const list = document.getElementById("entry-list");
-
     if (!arr.length) {
-      const msg = revFilter === "Pending" ? "No pending expenses. All caught up!" :
-                  revFilter === "Done"    ? "Nothing marked as entered yet." :
-                                           "No expenses logged yet.";
+      const msg = revFilter==="Pending" ? "No pending expenses. All caught up!" :
+                  revFilter==="Done"    ? "Nothing marked as entered yet."      : "No expenses logged yet.";
       list.innerHTML = `<div class="empty-state"><span>${revFilter==="Pending"?"✅":"📋"}</span>${msg}</div>`;
       return;
     }
@@ -395,25 +446,31 @@
             ${e.category==="Fuel" ? "⛽" : "🔧"}
           </div>
           <div class="entry-main">
-            <div class="entry-title">${e.category} — ${e.car === "Chevy" ? "Chevy Cruze" : "Mustang GT"}</div>
-            <div class="entry-meta">${fmtDate(e.date)}${e.desc ? " &bull; " + e.desc : ""}</div>
+            <div class="entry-title">${e.category} — ${e.car==="Chevy" ? "Chevy Cruze" : "Mustang GT"}</div>
+            <div class="entry-meta">${fmtDate(e.date)}${e.description ? " &bull; " + e.description : ""}</div>
           </div>
           <div class="entry-right">
-            <div class="entry-amt">$${e.amount.toFixed(2)}</div>
+            <div class="entry-amt">$${parseFloat(e.amount).toFixed(2)}</div>
             <div class="wave-row">
               <span class="wave-lbl">In Wave</span>
-              <input type="checkbox" class="wave-check" ${e.done ? "checked" : ""} onchange="toggleDone(${e.id})" title="Mark as entered in Wave">
+              <input type="checkbox" class="wave-check" ${e.done?"checked":""} onchange="toggleDone(${e.id},${e.done})" title="Mark as entered in Wave">
             </div>
           </div>
         </div>
         ${e.receipt ? `
         <div class="entry-receipt">
-          <img class="receipt-thumb" src="${e.receipt}" alt="Receipt" onclick="openLightbox('${e.receipt}')" title="Click to view full receipt">
+          <img class="receipt-thumb" src="${e.receipt}" alt="Receipt" onclick="openLightbox('${e.receipt}')" title="Tap to view">
         </div>` : ""}
       </div>`).join("");
   }
 
-  refreshBadge();
+  // ── Register service worker ──
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(console.error);
+  }
+
+  // Init badge on load
+  updateBadge();
 </script>
 </body>
 </html>
