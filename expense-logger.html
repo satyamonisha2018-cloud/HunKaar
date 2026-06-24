@@ -299,13 +299,42 @@
   function previewReceipt(input) {
     const file = input.files[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      receiptData = e.target.result;
-      document.getElementById("receipt-img").src              = receiptData;
+
+    const showPreview = dataUrl => {
+      receiptData = dataUrl;
+      document.getElementById("receipt-img").src              = dataUrl;
       document.getElementById("receipt-preview").style.display = "block";
       document.getElementById("rz-placeholder").style.display  = "none";
       document.getElementById("receipt-zone").classList.add("has-file");
+    };
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      // Re-encode the photo to a standard, browser-safe JPEG and shrink it.
+      // This converts iPhone HEIC (and anything else) to JPEG and keeps the
+      // stored data small so it saves and displays reliably everywhere.
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 1400;
+        let { width: w, height: h } = img;
+        if (w > MAX || h > MAX) {
+          const s = MAX / Math.max(w, h);
+          w = Math.round(w * s);
+          h = Math.round(h * s);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        try {
+          showPreview(canvas.toDataURL("image/jpeg", 0.72));
+        } catch (err) {
+          showPreview(e.target.result); // fallback: store original
+        }
+      };
+      // If the browser can't decode the format (rare), store the original.
+      img.onerror = () => showPreview(e.target.result);
+      img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   }
