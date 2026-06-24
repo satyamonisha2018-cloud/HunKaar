@@ -463,7 +463,7 @@
         </div>
         ${e.receipt ? `
         <div class="entry-receipt">
-          <img class="receipt-thumb" src="${e.receipt}" alt="Receipt" onclick="openLightbox('${e.receipt}')" title="Tap to view">
+          <img class="receipt-thumb" src="${e.receipt}" alt="Receipt" onclick="openLightbox(this.src)" title="Tap to view">
         </div>` : ""}
       </div>`).join("");
   }
