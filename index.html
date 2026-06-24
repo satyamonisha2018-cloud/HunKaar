@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rental Car Business Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     :root {
       --ink: #152033;
@@ -519,6 +520,12 @@ const EXPENSES = [
   { month:"Jun", car:"Mustang", desc:"Mustang Parking",    category:"Parking",   amount:250.00  },
   { month:"Jun", car:"Mustang", desc:"Mustang Insurance",  category:"Insurance", amount:150.00  },
 ];
+
+// ── Live fuel & maintenance from Supabase expense logger ──
+const _supa = supabase.createClient(
+  'https://tslryqspvmnkajfpjeku.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzbHJ5cXNwdm1ua2FqZnBqZWt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIyNTUzMjksImV4cCI6MjA5NzgzMTMyOX0.fNe_PKK84FPvqnrzF8XiH0YiNYG-27MWdAoWvbiMY6w'
+);
 
 // Purchase price per car — capital cost to recover before the vehicle is "in profit"
 const CAR_COSTS = { Chevy: 7400, Mustang: 23432 };
@@ -1166,9 +1173,28 @@ $("tabBar").addEventListener("click", e => {
   if (btn) switchTab(btn.dataset.tab);
 });
 
-// Boot
+// Boot — fetch live fuel & maintenance from Supabase, then render
 renderFilters();
-render();
+(async () => {
+  try {
+    const { data } = await _supa.from('expenses').select('car,category,amount,date,description');
+    if (data && data.length) {
+      data.forEach(row => {
+        const mo = MNAMES[parseInt(row.date.split('-')[1]) - 1];
+        EXPENSES.push({
+          month:    mo,
+          car:      row.car,
+          desc:     row.description || row.category,
+          category: row.category,
+          amount:   parseFloat(row.amount)
+        });
+      });
+    }
+  } catch (e) {
+    console.warn('Live expenses unavailable, showing static data only', e);
+  }
+  render();
+})();
 </script>
 <div id="donutTip" class="donut-tip"></div>
 </body>
