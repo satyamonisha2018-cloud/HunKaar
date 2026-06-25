@@ -429,8 +429,14 @@
   async function deleteEntry(id) {
     if (!db) return;
     if (!confirm("Delete this expense permanently? This also removes it from the dashboard (after the dashboard is refreshed).")) return;
-    const { error } = await db.from('expenses').delete().eq('id', id);
+    // .select() returns the rows actually deleted — if empty, nothing was
+    // removed (usually a missing DELETE policy in Supabase row-level security).
+    const { data, error } = await db.from('expenses').delete().eq('id', id).select();
     if (error) { alert("Couldn't delete. Check your connection and try again."); console.error(error); return; }
+    if (!data || !data.length) {
+      alert("Delete was blocked by Supabase. The 'expenses' table needs a DELETE policy.\n\nIn Supabase: Authentication → Policies → expenses → add a policy allowing DELETE for the anon/public role.");
+      return;
+    }
     await renderReview();
   }
 

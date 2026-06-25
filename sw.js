@@ -1,4 +1,4 @@
-const CACHE = 'hunkaar-v11';
+const CACHE = 'hunkaar-v12';
 const ASSETS = [
   './expense-logger.html',
   './manifest.json',
